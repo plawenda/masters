@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="120">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Masters Pool - Pool Payouts</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      background: #f9f9f9;
+    }
+    header {
+      background-image: url('https://golf.com/wp-content/uploads/2022/03/augusta-national-scenic-1024x576.jpg');
+      background-size: cover;
+      background-position: center 50%;
+      padding: 60px 20px;
+      text-align: center;
+    }
+    .logo {
+      height: 60px;
+    }
+    .site-title {
+      color: white;
+      font-size: 36px;
+      font-weight: bold;
+      text-shadow: 1px 1px 3px #000;
+      margin-top: 10px;
+    }
+    nav {
+      background-color: #004225;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      padding: 10px 0;
+    }
+    nav a {
+      color: white;
+      margin: 0 15px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    nav a.active {
+      background-color: #fff2cc;
+      color: #004225;
+      padding: 6px 12px;
+      border-radius: 4px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      padding: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    th {
+      background: #004225;
+      color: white;
+      padding: 10px;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    td {
+      padding: 8px;
+      border: 1px solid #ddd;
+    }
+    tr:nth-child(even) {
+      background-color: #f0f0f0;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <img class="logo" src="masters_pool_logo.png" alt="Masters Pool Logo">
+    <div class="site-title">Masters Pool</div>
+  </div>
+</header>
+
+<nav>
+  <a href="index.html">Live Leaderboard</a>
+  <a href="detailed.html">Detailed Leaderboard</a>
+  <a href="costs.html">Golfer Costs</a>
+  <a href="prizes.html">Prize Money</a>
+  <a href="payouts.html" class="active">Pool Payouts</a>
+</nav>
+
+<div class="container">
+  <h2>Pool Payouts</h2>
+  <table id="payoutsTable"></table>
+</div>
+
+<script>
+function loadTSV(url, tableId) {
+  return fetch(url)
+    .then(response => response.text())
+    .then(data => {
+      const rows = data.trim().split('\n').map(r => r.split('\t'));
+      const headers = rows[0];
+      const table = document.getElementById(tableId);
+      const thead = document.createElement('thead');
+      const headerRow = document.createElement('tr');
+      headers.forEach(h => {
+        const th = document.createElement('th');
+        th.textContent = h;
+        headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow);
+      table.appendChild(thead);
+
+      const tbody = document.createElement('tbody');
+      rows.slice(1).forEach(row => {
+        const tr = document.createElement('tr');
+        row.forEach((cell, j) => {
+          const td = document.createElement('td');
+          // Format column 1 (index 1, second column) as percentage if it ends in %
+          if (j === 1) {
+            const val = parseFloat(cell);
+            td.textContent = isNaN(val) ? cell : `${val.toFixed(1)}%`;
+          } else {
+            td.textContent = cell;
+          }
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+    });
+}
+
+// Load live data from Pool Payouts sheet
+const payoutsUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT_htvNiJZPFTNohWOu_fT0VjKlQQWfMFEi08SU1tlN3HHauBbe-I5O3KPbwc-WPkBR8Hdh5yEMssOl/pub?gid=1012228973&single=true&output=tsv";
+loadTSV(payoutsUrl, 'payoutsTable');
+</script>
+
+</body>
+</html>

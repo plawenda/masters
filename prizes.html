@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="120">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Masters Pool - Prize Money</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      background: #f9f9f9;
+    }
+    header {
+      background-image: url('https://golf.com/wp-content/uploads/2022/03/augusta-national-scenic-1024x576.jpg');
+      background-size: cover;
+      background-position: center 50%;
+      padding: 60px 20px;
+      text-align: center;
+    }
+    .logo {
+      height: 60px;
+    }
+    .site-title {
+      color: white;
+      font-size: 36px;
+      font-weight: bold;
+      text-shadow: 1px 1px 3px #000;
+      margin-top: 10px;
+    }
+    nav {
+      background-color: #004225;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      padding: 10px 0;
+    }
+    nav a {
+      color: white;
+      margin: 0 15px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    nav a.active {
+      background-color: #fff2cc;
+      color: #004225;
+      padding: 6px 12px;
+      border-radius: 4px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      padding: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    th {
+      background: #004225;
+      color: white;
+      padding: 10px;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    td {
+      padding: 8px;
+      border: 1px solid #ddd;
+    }
+    tr:nth-child(even) {
+      background-color: #f0f0f0;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <img class="logo" src="masters_pool_logo.png" alt="Masters Pool Logo">
+    <div class="site-title">Masters Pool</div>
+  </div>
+</header>
+
+<nav>
+  <a href="index.html">Live Leaderboard</a>
+  <a href="detailed.html">Detailed Leaderboard</a>
+  <a href="costs.html">Golfer Costs</a>
+  <a href="prizes.html" class="active">Prize Money</a>
+<a href="payouts.html">Pool Payouts</a>
+</nav>
+
+<div class="container">
+  <h2>Prize Money</h2>
+  <table id="prizeMoney"></table>
+</div>
+
+<script>
+function formatMoney(value) {
+  if (!value || isNaN(value)) return value;
+  const num = parseFloat(value);
+  return num.toLocaleString('en-US');
+}
+
+function loadTSV(url, tableId, moneyColumnNames = []) {
+  return fetch(url)
+    .then(response => response.text())
+    .then(data => {
+      const rows = data.trim().split('\n').map(r => r.split('\t'));
+      const headers = rows[0];
+      const moneyIndices = headers.map((h, i) => moneyColumnNames.includes(h) ? i : -1).filter(i => i !== -1);
+      const table = document.getElementById(tableId);
+      const thead = document.createElement('thead');
+      const headerRow = document.createElement('tr');
+      headers.forEach(h => {
+        const th = document.createElement('th');
+        th.textContent = h;
+        headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow);
+      table.appendChild(thead);
+      const tbody = document.createElement('tbody');
+      rows.slice(1).forEach(row => {
+        const tr = document.createElement('tr');
+        row.forEach((cell, j) => {
+          const td = document.createElement('td');
+          td.textContent = moneyIndices.includes(j) ? formatMoney(cell) : cell;
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+    });
+}
+
+const prizesUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT_htvNiJZPFTNohWOu_fT0VjKlQQWfMFEi08SU1tlN3HHauBbe-I5O3KPbwc-WPkBR8Hdh5yEMssOl/pub?gid=206557939&single=true&output=tsv";
+loadTSV(prizesUrl, 'prizeMoney');
+</script>
+
+</body>
+</html>

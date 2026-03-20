@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="120">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detailed Leaderboard</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      background: #f9f9f9;
+    }
+    header {
+      background-image: url('https://golf.com/wp-content/uploads/2022/03/augusta-national-scenic-1024x576.jpg');
+      background-size: cover;
+      background-position: center 50%;
+      padding: 60px 20px;
+      text-align: center;
+    }
+    .logo {
+      height: 60px;
+    }
+    .site-title {
+      color: white;
+      font-size: 36px;
+      font-weight: bold;
+      text-shadow: 1px 1px 3px #000;
+      margin-top: 10px;
+    }
+    nav {
+      background-color: #004225;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      padding: 10px 0;
+    }
+    nav a {
+      color: white;
+      margin: 0 15px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    nav a.active {
+      background-color: #fff2cc;
+      color: #004225;
+      padding: 6px 12px;
+      border-radius: 4px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      padding: 20px;
+    }
+    h2 {
+      font-size: 20px;
+      margin-bottom: 10px;
+      color: #004225;
+    }
+    .choices__inner {
+      margin-top: 20px;
+      z-index: 10 !important;
+      position: relative;
+    }
+    .choices__list--dropdown, .choices__list[aria-expanded] {
+      z-index: 20 !important;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    th {
+      background: #004225;
+      color: white;
+      padding: 10px;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    td {
+      padding: 8px;
+      border: 1px solid #ddd;
+    }
+    tr:nth-child(even) {
+      background-color: #f0f0f0;
+    }
+    tr.highlight {
+      background-color: #fff2cc !important;
+    }
+    #teamSummary {
+      margin: 20px 0;
+      padding: 10px;
+      border: 1px solid #ccc;
+      background: #fff;
+      display: none;
+      overflow-x: auto;
+    }
+    #teamSummary table {
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <img class="logo" src="masters_pool_logo.png" alt="Masters Pool Logo" />
+  <div class="site-title">Masters Pool</div>
+</header>
+
+<nav>
+  <a href="index.html">Live Leaderboard</a>
+  <a href="detailed.html" class="active">Detailed Leaderboard</a>
+  <a href="costs.html">Golfer Costs</a>
+  <a href="prizes.html">Prize Money</a>
+<a href="payouts.html">Pool Payouts</a>
+</nav>
+
+<div class="container">
+  <h2>Detailed Leaderboard</h2>
+  <label for="teamSelect"><strong>Select Your Teams:</strong></label>
+  <select id="teamSelect" multiple></select>
+
+  <div id="teamSummary"></div>
+
+  <table id="ourLeaderboard"></table>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<script>
+function formatMoney(value) {
+  const raw = value?.toString().replace(/[^\d.-]/g, '');
+  const num = parseFloat(raw);
+  return !isNaN(num) ? '$' + Math.round(num).toLocaleString('en-US') : value;
+}
+
+function loadTSV(url, tableId, moneyColumnNames = []) {
+  return fetch(url)
+    .then(response => response.text())
+    .then(data => {
+      const rows = data.trim().split('\n').map(r => r.split('\t'));
+      const headers = rows[0];
+      const moneyIndices = headers.map((h, i) => moneyColumnNames.includes(h) ? i : -1).filter(i => i !== -1);
+      const table = document.getElementById(tableId);
+      const thead = document.createElement('thead');
+      const headerRow = document.createElement('tr');
+      headers.forEach(h => {
+        const th = document.createElement('th');
+        th.textContent = h;
+        headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow);
+      table.innerHTML = '';
+      table.appendChild(thead);
+      const tbody = document.createElement('tbody');
+      rows.slice(1).forEach(row => {
+        const tr = document.createElement('tr');
+        row.forEach((cell, j) => {
+          const td = document.createElement('td');
+          td.textContent = moneyIndices.includes(j) ? formatMoney(cell) : cell;
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      return { headers, rows: rows.slice(1) };
+    });
+}
+
+const detailedUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT_htvNiJZPFTNohWOu_fT0VjKlQQWfMFEi08SU1tlN3HHauBbe-I5O3KPbwc-WPkBR8Hdh5yEMssOl/pub?gid=1898026908&single=true&output=tsv";
+
+let teamHeaders = [], teamRows = [];
+loadTSV(detailedUrl, 'ourLeaderboard').then(data => {
+  teamHeaders = data.headers;
+  teamRows = data.rows;
+
+  const teamSelect = document.getElementById('teamSelect');
+  const summaryDiv = document.getElementById('teamSummary');
+  const teamList = teamRows.map((r, i) => ({ name: r[1], index: i, data: r })).sort((a, b) => a.name.localeCompare(b.name));
+
+  teamList.forEach(team => {
+    const opt = document.createElement('option');
+    opt.value = team.name;
+    opt.textContent = team.name;
+    teamSelect.appendChild(opt);
+  });
+
+  const choices = new Choices(teamSelect, {
+    removeItemButton: true,
+    searchPlaceholderValue: 'Type to find your team...'
+  });
+
+  setTimeout(() => {
+    const interval = setInterval(() => {
+      const input = document.querySelector('.choices__input');
+      if (input) {
+        input.setAttribute('type', 'search');
+        input.setAttribute('inputmode', 'text');
+        input.setAttribute('autocomplete', 'on');
+        input.setAttribute('autocorrect', 'on');
+        input.setAttribute('autocapitalize', 'none');
+        input.setAttribute('spellcheck', 'false');
+        input.setAttribute('tabindex', '0');
+        input.style.opacity = '1';
+        input.style.pointerEvents = 'auto';
+        input.style.position = 'relative';
+        input.focus();
+        input.dispatchEvent(new Event('touchstart', { bubbles: true, cancelable: true }));
+        clearInterval(interval);
+      }
+    }, 100);
+  }, 500);
+
+  function updateSummary(names) {
+    if (!names.length) return summaryDiv.style.display = 'none';
+    let html = '<table><thead><tr>';
+    teamHeaders.forEach(h => html += `<th>${h}</th>`);
+    html += '</tr></thead><tbody>';
+    names.forEach(name => {
+      const match = teamRows.find(r => r[1] === name);
+      if (match) {
+        html += '<tr>';
+        match.forEach(cell => html += `<td>${cell}</td>`);
+        html += '</tr>';
+      }
+    });
+    html += '</tbody></table>';
+    summaryDiv.innerHTML = html;
+    summaryDiv.style.display = 'block';
+  }
+
+  const savedNames = JSON.parse(localStorage.getItem('selectedDetailedTeamNames') || '[]');
+  savedNames.forEach(name => choices.setChoiceByValue(name));
+  document.querySelectorAll("#ourLeaderboard tbody tr").forEach((r, i) => {
+    const teamName = teamRows[i][1];
+    if (savedNames.includes(teamName)) {
+      r.classList.add("highlight");
+    }
+  });
+  updateSummary(savedNames);
+
+  teamSelect.addEventListener("change", function () {
+    const selected = Array.from(this.selectedOptions).map(o => o.value);
+    localStorage.setItem('selectedDetailedTeamNames', JSON.stringify(selected));
+    document.querySelectorAll("#ourLeaderboard tbody tr").forEach((r, i) => {
+      r.classList.toggle("highlight", selected.includes(teamRows[i][1]));
+    });
+    updateSummary(selected);
+  });
+});
+</script>
+</body>
+</html>

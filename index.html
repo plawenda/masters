@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="120">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Masters Pool</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f9f9f9; }
+    header {
+      background-image: url('https://golf.com/wp-content/uploads/2022/03/augusta-national-scenic-1024x576.jpg');
+      background-size: cover; background-position: center 50%; padding: 60px 20px; text-align: center;
+    }
+    .logo { height: 60px; }
+    .site-title {
+      color: white; font-size: 36px; font-weight: bold;
+      text-shadow: 1px 1px 3px #000; margin-top: 10px;
+    }
+    nav {
+      background-color: #004225; display: flex; justify-content: center;
+      flex-wrap: wrap; padding: 10px 0;
+    }
+    nav a {
+      color: white; margin: 0 15px; text-decoration: none; font-weight: bold;
+    }
+    nav a.active {
+      background-color: #fff2cc; color: #004225;
+      padding: 6px 12px; border-radius: 4px;
+    }
+    .container { max-width: 1200px; margin: auto; padding: 20px; }
+    .leaderboard-section { display: flex; flex-wrap: wrap; gap: 20px; }
+    .leaderboard-box { flex: 1 1 48%; }
+    h2 { font-size: 20px; margin-bottom: 10px; color: #004225; }
+    .choices__inner { margin-top: 20px; z-index: 10 !important; position: relative; }
+    .choices__list--dropdown, .choices__list[aria-expanded] { z-index: 20 !important; }
+    table {
+      width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px;
+    }
+    th {
+      background: #004225; color: white; padding: 10px; position: sticky;
+      top: 0; z-index: 1;
+    }
+    td { padding: 8px; border: 1px solid #ddd; }
+    tr:nth-child(even) { background-color: #f0f0f0; }
+    tr.highlight { background-color: #fff2cc !important; }
+    #teamSummary {
+      margin: 20px 0; padding: 10px; border: 1px solid #ccc;
+      background: #fff; display: none; overflow-x: auto;
+    }
+    #teamSummary table { width: 100%; }
+  </style>
+</head>
+<body>
+
+<header>
+  <img class="logo" src="masters_pool_logo.png" alt="Masters Pool Logo" />
+  <div class="site-title">Masters Pool</div>
+</header>
+
+<nav>
+  <a href="index.html" class="active">Live Leaderboard</a>
+  <a href="detailed.html">Detailed Leaderboard</a>
+  <a href="costs.html">Golfer Costs</a>
+  <a href="prizes.html">Prize Money</a>
+<a href="payouts.html">Pool Payouts</a>
+</nav>
+
+<div class="container">
+  <table id="lastUpdatedTable" style="margin-bottom: 20px;"></table>
+
+  <label for="teamSelect"><strong>Select Your Teams:</strong></label>
+  <select id="teamSelect" multiple></select>
+
+  <div id="teamSummary"></div>
+
+  <div class="leaderboard-section">
+    <div class="leaderboard-box">
+      <h2>Our Leaderboard</h2>
+      <table id="ourLeaderboard"></table>
+    </div>
+    <div class="leaderboard-box">
+      <h2>Masters Leaderboard</h2>
+      <table id="mastersLeaderboard"></table>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<script>
+function formatMoney(value) {
+  const raw = value?.toString().replace(/[^\d.-]/g, '');
+  const num = parseFloat(raw);
+  return !isNaN(num) ? '$' + Math.round(num).toLocaleString('en-US') : value;
+}
+
+function getMoneyColumnIndices(headers, moneyColumnNames) {
+  return headers.map((h, i) => {
+    return moneyColumnNames.some(name => h.trim().toLowerCase().includes(name.toLowerCase())) ? i : -1;
+  }).filter(i => i !== -1);
+}
+
+function loadTSV(url, tableId, moneyColumnNames = [], extraFormatIndex = null) {
+  return fetch(url)
+    .then(response => response.text())
+    .then(data => {
+      const rows = data.trim().split('\n').map(r => r.split('\t'));
+      const headers = rows[0];
+      const moneyIndices = getMoneyColumnIndices(headers, moneyColumnNames);
+      const table = document.getElementById(tableId);
+      const thead = document.createElement('thead');
+      const headerRow = document.createElement('tr');
+      headers.forEach(h => {
+        const th = document.createElement('th');
+        th.textContent = h;
+        headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow);
+      table.innerHTML = '';
+      table.appendChild(thead);
+      const tbody = document.createElement('tbody');
+      rows.slice(1).forEach(row => {
+        const tr = document.createElement('tr');
+        row.forEach((cell, j) => {
+          const td = document.createElement('td');
+          td.textContent = (moneyIndices.includes(j) || j === extraFormatIndex) ? formatMoney(cell) : cell;
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      return { headers, rows: rows.slice(1) };
+    });
+}
+
+const leaderboardUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT_htvNiJZPFTNohWOu_fT0VjKlQQWfMFEi08SU1tlN3HHauBbe-I5O3KPbwc-WPkBR8Hdh5yEMssOl/pub?gid=994722150&single=true&output=tsv";
+const mastersUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT_htvNiJZPFTNohWOu_fT0VjKlQQWfMFEi08SU1tlN3HHauBbe-I5O3KPbwc-WPkBR8Hdh5yEMssOl/pub?gid=1782015386&single=true&output=tsv";
+const updateUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT_htvNiJZPFTNohWOu_fT0VjKlQQWfMFEi08SU1tlN3HHauBbe-I5O3KPbwc-WPkBR8Hdh5yEMssOl/pub?gid=878213226&single=true&output=tsv";
+
+loadTSV(updateUrl, 'lastUpdatedTable');
+
+let teamHeaders = [], teamRows = [];
+loadTSV(leaderboardUrl, 'ourLeaderboard', ['earnings'], 2).then(data => {
+  teamHeaders = data.headers;
+  teamRows = data.rows;
+
+  const teamSelect = document.getElementById('teamSelect');
+  const summaryDiv = document.getElementById('teamSummary');
+  const teamList = teamRows.map((r, i) => ({ name: r[1], index: i, data: r })).sort((a, b) => a.name.localeCompare(b.name));
+
+  teamList.forEach(team => {
+    const opt = document.createElement('option');
+    opt.value = team.name;
+    opt.textContent = team.name;
+    teamSelect.appendChild(opt);
+  });
+
+  const choices = new Choices(teamSelect, {
+    removeItemButton: true,
+    searchPlaceholderValue: 'Type to find your team...',
+    allowHTML: false,
+    searchEnabled: true,
+    renderChoiceLimit: -1,
+    itemSelectText: '',
+    position: 'auto'
+  });
+
+  function updateSummary(names) {
+    if (!names.length) return summaryDiv.style.display = 'none';
+    let html = '<table><thead><tr>';
+    teamHeaders.forEach(h => html += `<th>${h}</th>`);
+    html += '</tr></thead><tbody>';
+    names.forEach(name => {
+      const match = teamRows.find(r => r[1] === name);
+      if (match) {
+        html += '<tr>';
+        match.forEach((cell, i) => {
+          const header = teamHeaders[i];
+          html += `<td>${header.toLowerCase().includes('earn') ? formatMoney(cell) : cell}</td>`;
+        });
+        html += '</tr>';
+      }
+    });
+    html += '</tbody></table>';
+    summaryDiv.innerHTML = html;
+    summaryDiv.style.display = 'block';
+  }
+
+  const savedNames = JSON.parse(localStorage.getItem('selectedTeamNames') || '[]');
+  savedNames.forEach(name => choices.setChoiceByValue(name));
+  document.querySelectorAll("#ourLeaderboard tbody tr").forEach((r, i) => {
+    const teamName = teamRows[i][1];
+    if (savedNames.includes(teamName)) {
+      r.classList.add("highlight");
+    }
+  });
+  updateSummary(savedNames);
+
+  teamSelect.addEventListener("change", function () {
+    const selected = Array.from(this.selectedOptions).map(o => o.value);
+    localStorage.setItem('selectedTeamNames', JSON.stringify(selected));
+    document.querySelectorAll("#ourLeaderboard tbody tr").forEach((r, i) => {
+      r.classList.toggle("highlight", selected.includes(teamRows[i][1]));
+    });
+    updateSummary(selected);
+  });
+});
+
+// Estimated column = column 6 (index 5)
+loadTSV(mastersUrl, 'mastersLeaderboard', ['estimated'], 5);
+</script>
+
+</body>
+</html>
