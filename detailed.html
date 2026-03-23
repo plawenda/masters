@@ -189,29 +189,13 @@ loadTSV(detailedUrl, 'ourLeaderboard').then(data => {
 
   const choices = new Choices(teamSelect, {
     removeItemButton: true,
-    searchPlaceholderValue: 'Type to find your team...'
+    searchPlaceholderValue: 'Type to find your team...',
+    allowHTML: false,
+    searchEnabled: true,
+    renderChoiceLimit: -1,
+    itemSelectText: '',
+    position: 'auto'
   });
-
-  setTimeout(() => {
-    const interval = setInterval(() => {
-      const input = document.querySelector('.choices__input');
-      if (input) {
-        input.setAttribute('type', 'search');
-        input.setAttribute('inputmode', 'text');
-        input.setAttribute('autocomplete', 'on');
-        input.setAttribute('autocorrect', 'on');
-        input.setAttribute('autocapitalize', 'none');
-        input.setAttribute('spellcheck', 'false');
-        input.setAttribute('tabindex', '0');
-        input.style.opacity = '1';
-        input.style.pointerEvents = 'auto';
-        input.style.position = 'relative';
-        input.focus();
-        input.dispatchEvent(new Event('touchstart', { bubbles: true, cancelable: true }));
-        clearInterval(interval);
-      }
-    }, 100);
-  }, 500);
 
   function updateSummary(names) {
     if (!names.length) return summaryDiv.style.display = 'none';
@@ -222,7 +206,10 @@ loadTSV(detailedUrl, 'ourLeaderboard').then(data => {
       const match = teamRows.find(r => r[1] === name);
       if (match) {
         html += '<tr>';
-        match.forEach(cell => html += `<td>${cell}</td>`);
+        match.forEach((cell, i) => {
+          const header = teamHeaders[i];
+          html += `<td>${header.toLowerCase().includes('earn') ? formatMoney(cell) : cell}</td>`;
+        });
         html += '</tr>';
       }
     });
