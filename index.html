@@ -4,51 +4,214 @@
   <meta charset="UTF-8">
   <meta http-equiv="refresh" content="120">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Masters Pool</title>
+  <title>Masters Pool — Live Leaderboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
   <style>
-    body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f9f9f9; }
+    :root {
+      --bg: #080d14;
+      --surface: #0f1923;
+      --surface2: #162032;
+      --border: #1e3352;
+      --gold: #c9a84c;
+      --gold-dim: rgba(201,168,76,0.15);
+      --green: #00875a;
+      --text: #dde4ef;
+      --text-muted: #5a7186;
+      --highlight: rgba(201,168,76,0.10);
+    }
+    * { box-sizing: border-box; }
+    body { font-family: 'Barlow', 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: var(--text); }
+
     header {
-      background-image: url('https://golf.com/wp-content/uploads/2022/03/augusta-national-scenic-1024x576.jpg');
-      background-size: cover; background-position: center 50%; padding: 60px 20px; text-align: center;
+      background-image: linear-gradient(to bottom, rgba(8,13,20,0.50) 0%, rgba(8,13,20,0.88) 100%),
+        url('https://golf.com/wp-content/uploads/2022/03/augusta-national-scenic-1024x576.jpg');
+      background-size: cover;
+      background-position: center 50%;
+      padding: 32px 20px 22px;
+      text-align: center;
+      border-bottom: 2px solid var(--gold);
     }
-    .logo { height: 60px; }
+    .logo { height: 56px; }
     .site-title {
-      color: white; font-size: 36px; font-weight: bold;
-      text-shadow: 1px 1px 3px #000; margin-top: 10px;
+      font-family: 'Barlow Condensed', sans-serif;
+      color: var(--gold);
+      font-size: 38px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-top: 8px;
+      text-shadow: 0 2px 16px rgba(0,0,0,0.9);
     }
+
     nav {
-      background-color: #004225; display: flex; justify-content: center;
-      flex-wrap: wrap; padding: 10px 0;
+      background: var(--surface);
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      padding: 0;
+      border-bottom: 1px solid var(--border);
     }
     nav a {
-      color: white; margin: 0 15px; text-decoration: none; font-weight: bold;
+      color: var(--text-muted);
+      padding: 14px 20px;
+      text-decoration: none;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 600;
+      font-size: 15px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      border-bottom: 3px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
     }
-    nav a.active {
-      background-color: #fff2cc; color: #004225;
-      padding: 6px 12px; border-radius: 4px;
+    nav a:hover { color: var(--text); }
+    nav a.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+    .container { max-width: 1300px; margin: auto; padding: 24px 20px; }
+
+    .info-bar {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 18px;
+      font-family: 'Barlow Condensed', sans-serif;
+      letter-spacing: 0.5px;
     }
-    .container { max-width: 1200px; margin: auto; padding: 20px; }
-    .leaderboard-section { display: flex; flex-wrap: wrap; gap: 20px; }
-    .leaderboard-box { flex: 1 1 48%; }
-    h2 { font-size: 20px; margin-bottom: 10px; color: #004225; }
-    .choices__inner { margin-top: 20px; z-index: 10 !important; position: relative; }
-    .choices__list--dropdown, .choices__list[aria-expanded] { z-index: 20 !important; }
-    table {
-      width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px;
+    .info-bar table { width: auto; }
+    .info-bar td { padding: 2px 8px 2px 0; border: none; color: var(--text-muted); font-size: 12px; background: transparent; }
+
+    .selector-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 18px;
+      margin-bottom: 20px;
     }
-    th {
-      background: #004225; color: white; padding: 10px; position: sticky;
-      top: 0; z-index: 1;
+    .selector-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 10px;
     }
-    td { padding: 8px; border: 1px solid #ddd; }
-    tr:nth-child(even) { background-color: #f0f0f0; }
-    tr.highlight { background-color: #fff2cc !important; }
+
+    /* Choices.js dark overrides */
+    .choices { margin: 0; }
+    .choices__inner {
+      background: var(--surface2) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 6px !important;
+      padding: 5px 8px !important;
+      min-height: 42px !important;
+    }
+    .choices__input {
+      background: transparent !important;
+      color: var(--text) !important;
+      font-family: 'Barlow', sans-serif !important;
+      font-size: 14px !important;
+    }
+    .choices__input::placeholder { color: var(--text-muted) !important; }
+    .choices__list--multiple .choices__item {
+      background: var(--gold) !important;
+      border-color: #a88a3a !important;
+      color: #080d14 !important;
+      font-family: 'Barlow Condensed', sans-serif !important;
+      font-weight: 700 !important;
+      font-size: 13px !important;
+      border-radius: 4px !important;
+    }
+    .choices__list--dropdown {
+      background: var(--surface) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 6px !important;
+      z-index: 100 !important;
+    }
+    .choices__list--dropdown .choices__item { color: var(--text) !important; font-family: 'Barlow', sans-serif !important; }
+    .choices__list--dropdown .choices__item--selectable.is-highlighted { background: var(--surface2) !important; color: var(--gold) !important; }
+    .choices__list--dropdown .choices__input { background: var(--surface2) !important; border-bottom: 1px solid var(--border) !important; color: var(--text) !important; }
+    .choices__placeholder { color: var(--text-muted) !important; }
+    .choices__list[aria-expanded] { z-index: 100 !important; }
+
     #teamSummary {
-      margin: 20px 0; padding: 10px; border: 1px solid #ccc;
-      background: #fff; display: none; overflow-x: auto;
+      background: var(--surface);
+      border: 1px solid var(--gold);
+      border-radius: 8px;
+      margin: 0 0 20px;
+      overflow-x: auto;
+      display: none;
     }
-    #teamSummary table { width: 100%; }
+    #teamSummary table { margin: 0; }
+
+    .leaderboard-section { display: flex; flex-wrap: wrap; gap: 20px; }
+    .leaderboard-box { flex: 1 1 48%; min-width: 300px; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .card-header {
+      background: var(--surface2);
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .card-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text);
+      flex: 1;
+    }
+    .live-badge {
+      background: var(--green);
+      color: #fff;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 3px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.55} }
+
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    thead th {
+      background: var(--surface2);
+      color: var(--gold);
+      padding: 10px 12px;
+      text-align: left;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 600;
+      font-size: 12px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    tbody td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: rgba(30,50,82,0.5); }
+    tbody tr.highlight { background: var(--highlight) !important; }
+    tbody tr.highlight td:first-child { border-left: 3px solid var(--gold); padding-left: 9px; }
+
+    .info-bar table thead th { background: transparent; color: var(--text-muted); padding: 0; font-size: 12px; letter-spacing: 0; text-transform: none; position: static; }
   </style>
 </head>
 <body>
@@ -63,25 +226,39 @@
   <a href="detailed.html">Detailed Leaderboard</a>
   <a href="costs.html">Golfer Costs</a>
   <a href="prizes.html">Prize Money</a>
-<a href="payouts.html">Pool Payouts</a>
+  <a href="payouts.html">Pool Payouts</a>
 </nav>
 
 <div class="container">
-  <table id="lastUpdatedTable" style="margin-bottom: 20px;"></table>
+  <div class="info-bar">
+    <table id="lastUpdatedTable"></table>
+  </div>
 
-  <label for="teamSelect"><strong>Select Your Teams:</strong></label>
-  <select id="teamSelect" multiple></select>
+  <div class="selector-card">
+    <div class="selector-label">Select Your Teams</div>
+    <select id="teamSelect" multiple></select>
+  </div>
 
   <div id="teamSummary"></div>
 
   <div class="leaderboard-section">
     <div class="leaderboard-box">
-      <h2>Our Leaderboard</h2>
-      <table id="ourLeaderboard"></table>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Our Leaderboard</span>
+          <span class="live-badge">Live</span>
+        </div>
+        <table id="ourLeaderboard"></table>
+      </div>
     </div>
     <div class="leaderboard-box">
-      <h2>Masters Leaderboard</h2>
-      <table id="mastersLeaderboard"></table>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Masters Leaderboard</span>
+          <span class="live-badge">Live</span>
+        </div>
+        <table id="mastersLeaderboard"></table>
+      </div>
     </div>
   </div>
 </div>
@@ -157,7 +334,7 @@ loadTSV(leaderboardUrl, 'ourLeaderboard', ['earnings'], 2).then(data => {
 
   const choices = new Choices(teamSelect, {
     removeItemButton: true,
-    searchPlaceholderValue: 'Type to find your team...',
+    searchPlaceholderValue: 'Search teams...',
     allowHTML: false,
     searchEnabled: true,
     renderChoiceLimit: -1,
@@ -190,9 +367,7 @@ loadTSV(leaderboardUrl, 'ourLeaderboard', ['earnings'], 2).then(data => {
   savedNames.forEach(name => choices.setChoiceByValue(name));
   document.querySelectorAll("#ourLeaderboard tbody tr").forEach((r, i) => {
     const teamName = teamRows[i][1];
-    if (savedNames.includes(teamName)) {
-      r.classList.add("highlight");
-    }
+    if (savedNames.includes(teamName)) r.classList.add("highlight");
   });
   updateSummary(savedNames);
 
@@ -206,9 +381,7 @@ loadTSV(leaderboardUrl, 'ourLeaderboard', ['earnings'], 2).then(data => {
   });
 });
 
-// Estimated column = column 6 (index 5)
 loadTSV(mastersUrl, 'mastersLeaderboard', ['estimated'], 5);
 </script>
-
 </body>
 </html>
