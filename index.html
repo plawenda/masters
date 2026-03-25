@@ -321,6 +321,12 @@ function getStoredPositions(key) {
   try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch { return {}; }
 }
 
+function parseRank(val) {
+  if (val == null) return null;
+  const n = parseInt(val.toString().replace(/\D/g, ''), 10);
+  return isNaN(n) ? null : n;
+}
+
 function applyMovementIndicators(tableId, rows, nameColIndex, storageKey) {
   const prev = getStoredPositions(storageKey);
   const current = {};
@@ -329,9 +335,11 @@ function applyMovementIndicators(tableId, rows, nameColIndex, storageKey) {
   tbody.querySelectorAll('tr').forEach(function(tr, i) {
     const name = rows[i] && rows[i][nameColIndex];
     if (!name) return;
-    current[name] = i;
+    const rank = parseRank(rows[i][0]);
+    if (rank === null) return;
+    current[name] = rank;
     if (!(name in prev)) return;
-    const diff = prev[name] - i;
+    const diff = prev[name] - rank;
     if (diff === 0) return;
     const span = document.createElement('span');
     span.className = diff > 0 ? 'move-up' : 'move-down';
@@ -349,7 +357,7 @@ let teamHeaders = [], teamRows = [];
 loadTSV(leaderboardUrl, 'ourLeaderboard', ['earnings'], 2).then(data => {
   teamHeaders = data.headers;
   teamRows = data.rows;
-  applyMovementIndicators('ourLeaderboard', teamRows, 1, 'ourLB_positions');
+  applyMovementIndicators('ourLeaderboard', teamRows, 1, 'ourLB_pos2');
 
   const teamSelect = document.getElementById('teamSelect');
   const summaryDiv = document.getElementById('teamSummary');
@@ -412,7 +420,7 @@ loadTSV(leaderboardUrl, 'ourLeaderboard', ['earnings'], 2).then(data => {
 });
 
 loadTSV(mastersUrl, 'mastersLeaderboard', ['estimated'], 5)
-  .then(data => applyMovementIndicators('mastersLeaderboard', data.rows, 1, 'mastersLB_positions'));
+  .then(data => applyMovementIndicators('mastersLeaderboard', data.rows, 1, 'mastersLB_pos2'));
 </script>
 </body>
 </html>
