@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="120">
+  <meta http-equiv="refresh" content="60">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Masters Pool — Detailed Leaderboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -197,6 +197,9 @@
     tbody tr:hover { background: rgba(30,50,82,0.5); }
     tbody tr.highlight { background: var(--highlight) !important; }
     tbody tr.highlight td:first-child { border-left: 3px solid var(--gold); padding-left: 9px; }
+
+    .move-up   { color: #22c55e; font-size: 9px; margin-left: 5px; vertical-align: middle; font-weight: 700; letter-spacing: 0; }
+    .move-down { color: #ef4444; font-size: 9px; margin-left: 5px; vertical-align: middle; font-weight: 700; letter-spacing: 0; }
   </style>
 </head>
 <body>
@@ -272,12 +275,39 @@ function loadTSV(url, tableId, moneyColumnNames = []) {
     });
 }
 
+function getStoredPositions(key) {
+  try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch { return {}; }
+}
+
+function applyMovementIndicators(tableId, rows, nameColIndex, storageKey) {
+  const prev = getStoredPositions(storageKey);
+  const current = {};
+  const tbody = document.querySelector('#' + tableId + ' tbody');
+  if (!tbody) return;
+  tbody.querySelectorAll('tr').forEach(function(tr, i) {
+    const name = rows[i] && rows[i][nameColIndex];
+    if (!name) return;
+    current[name] = i;
+    if (!(name in prev)) return;
+    const diff = prev[name] - i;
+    if (diff === 0) return;
+    const span = document.createElement('span');
+    span.className = diff > 0 ? 'move-up' : 'move-down';
+    span.title = (diff > 0 ? 'Up ' : 'Down ') + Math.abs(diff) + ' place' + (Math.abs(diff) > 1 ? 's' : '');
+    span.textContent = diff > 0 ? ' ▲' : ' ▼';
+    const firstTd = tr.querySelector('td');
+    if (firstTd) firstTd.appendChild(span);
+  });
+  localStorage.setItem(storageKey, JSON.stringify(current));
+}
+
 const detailedUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT_htvNiJZPFTNohWOu_fT0VjKlQQWfMFEi08SU1tlN3HHauBbe-I5O3KPbwc-WPkBR8Hdh5yEMssOl/pub?gid=1898026908&single=true&output=tsv";
 
 let teamHeaders = [], teamRows = [];
 loadTSV(detailedUrl, 'ourLeaderboard').then(data => {
   teamHeaders = data.headers;
   teamRows = data.rows;
+  applyMovementIndicators('ourLeaderboard', teamRows, 1, 'detailedLB_positions');
 
   const teamSelect = document.getElementById('teamSelect');
   const summaryDiv = document.getElementById('teamSummary');

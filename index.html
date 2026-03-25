@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="120">
+  <meta http-equiv="refresh" content="60">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Masters Pool — Live Leaderboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -212,6 +212,9 @@
     tbody tr.highlight td:first-child { border-left: 3px solid var(--gold); padding-left: 9px; }
 
     .info-bar table thead th { background: transparent; color: var(--text-muted); padding: 0; font-size: 12px; letter-spacing: 0; text-transform: none; position: static; }
+
+    .move-up   { color: #22c55e; font-size: 9px; margin-left: 5px; vertical-align: middle; font-weight: 700; letter-spacing: 0; }
+    .move-down { color: #ef4444; font-size: 9px; margin-left: 5px; vertical-align: middle; font-weight: 700; letter-spacing: 0; }
   </style>
 </head>
 <body>
@@ -314,12 +317,39 @@ const leaderboardUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT_htvNi
 const mastersUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT_htvNiJZPFTNohWOu_fT0VjKlQQWfMFEi08SU1tlN3HHauBbe-I5O3KPbwc-WPkBR8Hdh5yEMssOl/pub?gid=1782015386&single=true&output=tsv";
 const updateUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT_htvNiJZPFTNohWOu_fT0VjKlQQWfMFEi08SU1tlN3HHauBbe-I5O3KPbwc-WPkBR8Hdh5yEMssOl/pub?gid=878213226&single=true&output=tsv";
 
+function getStoredPositions(key) {
+  try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch { return {}; }
+}
+
+function applyMovementIndicators(tableId, rows, nameColIndex, storageKey) {
+  const prev = getStoredPositions(storageKey);
+  const current = {};
+  const tbody = document.querySelector('#' + tableId + ' tbody');
+  if (!tbody) return;
+  tbody.querySelectorAll('tr').forEach(function(tr, i) {
+    const name = rows[i] && rows[i][nameColIndex];
+    if (!name) return;
+    current[name] = i;
+    if (!(name in prev)) return;
+    const diff = prev[name] - i;
+    if (diff === 0) return;
+    const span = document.createElement('span');
+    span.className = diff > 0 ? 'move-up' : 'move-down';
+    span.title = (diff > 0 ? 'Up ' : 'Down ') + Math.abs(diff) + ' place' + (Math.abs(diff) > 1 ? 's' : '');
+    span.textContent = diff > 0 ? ' ▲' : ' ▼';
+    const firstTd = tr.querySelector('td');
+    if (firstTd) firstTd.appendChild(span);
+  });
+  localStorage.setItem(storageKey, JSON.stringify(current));
+}
+
 loadTSV(updateUrl, 'lastUpdatedTable');
 
 let teamHeaders = [], teamRows = [];
 loadTSV(leaderboardUrl, 'ourLeaderboard', ['earnings'], 2).then(data => {
   teamHeaders = data.headers;
   teamRows = data.rows;
+  applyMovementIndicators('ourLeaderboard', teamRows, 1, 'ourLB_positions');
 
   const teamSelect = document.getElementById('teamSelect');
   const summaryDiv = document.getElementById('teamSummary');
@@ -381,7 +411,8 @@ loadTSV(leaderboardUrl, 'ourLeaderboard', ['earnings'], 2).then(data => {
   });
 });
 
-loadTSV(mastersUrl, 'mastersLeaderboard', ['estimated'], 5);
+loadTSV(mastersUrl, 'mastersLeaderboard', ['estimated'], 5)
+  .then(data => applyMovementIndicators('mastersLeaderboard', data.rows, 1, 'mastersLB_positions'));
 </script>
 </body>
 </html>
