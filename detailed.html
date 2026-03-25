@@ -287,7 +287,7 @@ function parseRank(val) {
 
 function applyMovementIndicators(tableId, rows, nameColIndex, storageKey) {
   const prev = getStoredPositions(storageKey);
-  const current = {};
+  const toSave = {};
   const tbody = document.querySelector('#' + tableId + ' tbody');
   if (!tbody) return;
   tbody.querySelectorAll('tr').forEach(function(tr, i) {
@@ -295,9 +295,17 @@ function applyMovementIndicators(tableId, rows, nameColIndex, storageKey) {
     if (!name) return;
     const rank = parseRank(rows[i][0]);
     if (rank === null) return;
-    current[name] = rank;
-    if (!(name in prev)) return;
-    const diff = prev[name] - rank;
+    const entry = prev[name];
+    if (!entry || typeof entry !== 'object') {
+      toSave[name] = { ref: rank, last: rank };
+      return;
+    }
+    if (entry.last !== rank) {
+      toSave[name] = { ref: entry.last, last: rank };
+    } else {
+      toSave[name] = { ref: entry.ref, last: rank };
+    }
+    const diff = toSave[name].ref - rank;
     if (diff === 0) return;
     const span = document.createElement('span');
     span.className = diff > 0 ? 'move-up' : 'move-down';
@@ -306,7 +314,7 @@ function applyMovementIndicators(tableId, rows, nameColIndex, storageKey) {
     const firstTd = tr.querySelector('td');
     if (firstTd) firstTd.appendChild(span);
   });
-  localStorage.setItem(storageKey, JSON.stringify(current));
+  localStorage.setItem(storageKey, JSON.stringify(toSave));
 }
 
 const detailedUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT_htvNiJZPFTNohWOu_fT0VjKlQQWfMFEi08SU1tlN3HHauBbe-I5O3KPbwc-WPkBR8Hdh5yEMssOl/pub?gid=1898026908&single=true&output=tsv";
@@ -315,7 +323,7 @@ let teamHeaders = [], teamRows = [];
 loadTSV(detailedUrl, 'ourLeaderboard').then(data => {
   teamHeaders = data.headers;
   teamRows = data.rows;
-  applyMovementIndicators('ourLeaderboard', teamRows, 1, 'detailedLB_pos2');
+  applyMovementIndicators('ourLeaderboard', teamRows, 1, 'detailedLB_pos3');
 
   const teamSelect = document.getElementById('teamSelect');
   const summaryDiv = document.getElementById('teamSummary');

@@ -328,8 +328,10 @@ function parseRank(val) {
 }
 
 function applyMovementIndicators(tableId, rows, nameColIndex, storageKey) {
+  // Each entry: { ref: rankWhenTheyLastMoved, last: rankAtPreviousRefresh }
+  // ref only updates when the player actually moves, so arrows persist across quiet refreshes.
   const prev = getStoredPositions(storageKey);
-  const current = {};
+  const toSave = {};
   const tbody = document.querySelector('#' + tableId + ' tbody');
   if (!tbody) return;
   tbody.querySelectorAll('tr').forEach(function(tr, i) {
@@ -337,9 +339,19 @@ function applyMovementIndicators(tableId, rows, nameColIndex, storageKey) {
     if (!name) return;
     const rank = parseRank(rows[i][0]);
     if (rank === null) return;
-    current[name] = rank;
-    if (!(name in prev)) return;
-    const diff = prev[name] - rank;
+    const entry = prev[name];
+    if (!entry || typeof entry !== 'object') {
+      toSave[name] = { ref: rank, last: rank };
+      return;
+    }
+    if (entry.last !== rank) {
+      // Player moved since last refresh — update ref to where they just came from
+      toSave[name] = { ref: entry.last, last: rank };
+    } else {
+      // No change — keep ref so arrow persists
+      toSave[name] = { ref: entry.ref, last: rank };
+    }
+    const diff = toSave[name].ref - rank;
     if (diff === 0) return;
     const span = document.createElement('span');
     span.className = diff > 0 ? 'move-up' : 'move-down';
@@ -348,7 +360,7 @@ function applyMovementIndicators(tableId, rows, nameColIndex, storageKey) {
     const firstTd = tr.querySelector('td');
     if (firstTd) firstTd.appendChild(span);
   });
-  localStorage.setItem(storageKey, JSON.stringify(current));
+  localStorage.setItem(storageKey, JSON.stringify(toSave));
 }
 
 loadTSV(updateUrl, 'lastUpdatedTable');
@@ -357,7 +369,7 @@ let teamHeaders = [], teamRows = [];
 loadTSV(leaderboardUrl, 'ourLeaderboard', ['earnings'], 2).then(data => {
   teamHeaders = data.headers;
   teamRows = data.rows;
-  applyMovementIndicators('ourLeaderboard', teamRows, 1, 'ourLB_pos2');
+  applyMovementIndicators('ourLeaderboard', teamRows, 1, 'ourLB_pos3');
 
   const teamSelect = document.getElementById('teamSelect');
   const summaryDiv = document.getElementById('teamSummary');
@@ -420,7 +432,7 @@ loadTSV(leaderboardUrl, 'ourLeaderboard', ['earnings'], 2).then(data => {
 });
 
 loadTSV(mastersUrl, 'mastersLeaderboard', ['estimated'], 5)
-  .then(data => applyMovementIndicators('mastersLeaderboard', data.rows, 1, 'mastersLB_pos2'));
+  .then(data => applyMovementIndicators('mastersLeaderboard', data.rows, 1, 'mastersLB_pos3'));
 </script>
 </body>
 </html>
