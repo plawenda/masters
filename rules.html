@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Masters Pool — Rules</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f9f6f0;
+      --surface: #ffffff;
+      --surface2: #f2ede4;
+      --border: #e5e0d8;
+      --green: #006747;
+      --green-dim: rgba(0,103,71,0.06);
+      --gold: #b8972e;
+      --gold-dim: rgba(184,151,46,0.12);
+      --text: #1a1a1a;
+      --text-muted: #6b7280;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      opacity: 0;
+      animation: fadeIn 0.4s ease forwards;
+    }
+    @keyframes fadeIn { to { opacity: 1; } }
+
+    header {
+      background: var(--green);
+      background-image:
+        repeating-linear-gradient(
+          45deg,
+          rgba(255,255,255,0.015) 0px,
+          rgba(255,255,255,0.015) 1px,
+          transparent 1px,
+          transparent 8px
+        ),
+        linear-gradient(to bottom, #007a54 0%, #005c3d 100%);
+      padding: 36px 20px 28px;
+      text-align: center;
+      border-bottom: 2px solid var(--gold);
+    }
+    .logo { height: 60px; }
+    .site-title {
+      font-family: 'Playfair Display', serif;
+      color: #ffffff;
+      font-size: 34px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      margin-top: 10px;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.3);
+    }
+    .site-subtitle {
+      font-family: 'DM Sans', sans-serif;
+      color: rgba(255,255,255,0.65);
+      font-size: 12px;
+      font-weight: 400;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    nav {
+      background: var(--surface);
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      padding: 0;
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    nav a {
+      color: var(--text-muted);
+      padding: 14px 18px;
+      text-decoration: none;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      font-size: 12px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      border-bottom: 2px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    nav a:hover { color: var(--green); }
+    nav a.active { color: var(--green); border-bottom-color: var(--green); }
+
+    .intro-banner {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    .intro-inner {
+      max-width: 1300px;
+      margin: auto;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .intro-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      flex-shrink: 0;
+    }
+    .intro-welcome {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .dispatch {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 0 20px 14px 39px;
+    }
+    .dispatch-label {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 6px;
+    }
+    .dispatch-text {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.7;
+      border-left: 2px solid var(--gold);
+      padding-left: 14px;
+    }
+    .intro-shimmer {
+      display: inline-block;
+      width: 340px;
+      height: 14px;
+      background: linear-gradient(90deg, var(--border) 25%, var(--surface2) 50%, var(--border) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 4px;
+      vertical-align: middle;
+    }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    .container {
+      max-width: 760px;
+      margin: auto;
+      padding: 48px 20px 64px;
+    }
+
+    .rules-masthead {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    .rules-eyebrow {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 12px;
+    }
+    .rules-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 42px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.1;
+      margin: 0 0 16px;
+    }
+    .rules-divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .rules-divider-line {
+      height: 1px;
+      width: 60px;
+      background: var(--gold);
+    }
+    .rules-divider-diamond {
+      width: 6px;
+      height: 6px;
+      background: var(--gold);
+      transform: rotate(45deg);
+      flex-shrink: 0;
+    }
+
+    .rules-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .rule-item {
+      display: flex;
+      gap: 28px;
+      padding: 32px 0;
+      border-bottom: 1px solid var(--border);
+      align-items: flex-start;
+    }
+    .rule-item:first-child {
+      border-top: 1px solid var(--border);
+    }
+    .rule-number {
+      font-family: 'Playfair Display', serif;
+      font-size: 52px;
+      font-weight: 700;
+      color: var(--gold);
+      opacity: 0.35;
+      line-height: 1;
+      flex-shrink: 0;
+      width: 52px;
+      text-align: right;
+      user-select: none;
+    }
+    .rule-body {
+      padding-top: 6px;
+    }
+    .rule-text {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      line-height: 1.65;
+      color: var(--text);
+    }
+    .rule-text a {
+      color: var(--green);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(0,103,71,0.3);
+      transition: border-color 0.2s;
+    }
+    .rule-text a:hover {
+      border-bottom-color: var(--green);
+    }
+    .rule-note {
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    .cta-section {
+      margin-top: 56px;
+      text-align: center;
+    }
+    .cta-label {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+    .cta-button {
+      display: inline-block;
+      background: var(--green);
+      color: #ffffff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 16px 40px;
+      border-radius: 3px;
+      transition: background 0.2s, transform 0.1s;
+      box-shadow: 0 2px 8px rgba(0,103,71,0.25);
+    }
+    .cta-button:hover {
+      background: #005238;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,103,71,0.3);
+    }
+    .cta-button:active {
+      transform: translateY(0);
+    }
+    .cta-sub {
+      margin-top: 14px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <img class="logo" src="masters_pool_logo.png" alt="Masters Pool Logo">
+  <div class="site-title">Masters Pool</div>
+  <div class="site-subtitle">Augusta National · 2025</div>
+</header>
+
+<nav>
+  <a href="index.html">Live Leaderboard</a>
+  <a href="detailed.html">Detailed Leaderboard</a>
+  <a href="costs.html">Golfer Costs</a>
+  <a href="prizes.html">Prize Money</a>
+  <a href="payouts.html">Pool Payouts</a>
+  <a href="rules.html" class="active">Rules</a>
+</nav>
+
+<div class="intro-banner">
+  <div class="intro-inner">
+    <div class="intro-dot"></div>
+    <div class="intro-welcome">Welcome to the Masters Pool! We hope this adds to your enjoyment of the tournament. The leaderboard refreshes every 60 seconds with live data from DataGolf.</div>
+  </div>
+  <div class="dispatch" id="dispatch">
+    <div class="dispatch-label">Tournament Dispatch</div>
+    <div class="dispatch-text" id="introUpdate"><span class="intro-shimmer"></span></div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="rules-masthead">
+    <div class="rules-eyebrow">Augusta National · 2025</div>
+    <h1 class="rules-title">Pool Rules</h1>
+    <div class="rules-divider">
+      <div class="rules-divider-line"></div>
+      <div class="rules-divider-diamond"></div>
+      <div class="rules-divider-line"></div>
+    </div>
+  </div>
+
+  <ol class="rules-list">
+    <li class="rule-item">
+      <div class="rule-number">1</div>
+      <div class="rule-body">
+        <div class="rule-text">Each golfer is assigned a price based on their odds to win the tournament. Build your team using a budget of <strong>$30</strong>.</div>
+        <div class="rule-note">Double-check your math before submitting — budgets over $30 will be disqualified.</div>
+      </div>
+    </li>
+    <li class="rule-item">
+      <div class="rule-number">2</div>
+      <div class="rule-body">
+        <div class="rule-text">A <strong>$30 entry fee</strong> is due at the time of submission.</div>
+        <div class="rule-note">
+          Pay via <a href="https://venmo.com/Patrick-Lawenda" target="_blank" rel="noopener">Venmo @Patrick-Lawenda</a> or
+          <a href="mailto:Patrick.Lawenda@gmail.com">PayPal to Patrick.Lawenda@gmail.com</a>.
+        </div>
+      </div>
+    </li>
+    <li class="rule-item">
+      <div class="rule-number">3</div>
+      <div class="rule-body">
+        <div class="rule-text">You may select a <strong>maximum of 10 golfers</strong>. Your team score is the sum of all prize money your golfers earn at Augusta.</div>
+        <div class="rule-note">Missed cuts and withdrawals (WDs) count as $0.</div>
+      </div>
+    </li>
+    <li class="rule-item">
+      <div class="rule-number">4</div>
+      <div class="rule-body">
+        <div class="rule-text">The only way to submit your picks is through the <a href="https://tally.so/r/q4OM85" target="_blank" rel="noopener">official entry form</a>.</div>
+      </div>
+    </li>
+    <li class="rule-item">
+      <div class="rule-number">5</div>
+      <div class="rule-body">
+        <div class="rule-text"><strong>Multiple entries are allowed.</strong> Each entry requires a separate $30 fee.</div>
+      </div>
+    </li>
+    <li class="rule-item">
+      <div class="rule-number">6</div>
+      <div class="rule-body">
+        <div class="rule-text">Tell your friends — the more the merrier.</div>
+      </div>
+    </li>
+  </ol>
+
+  <div class="cta-section">
+    <div class="cta-label">Ready to play?</div>
+    <a href="https://tally.so/r/q4OM85" target="_blank" rel="noopener" class="cta-button">Enter Your Picks</a>
+    <div class="cta-sub">Entries close Thursday morning before Round 1</div>
+  </div>
+
+</div>
+
+<script>
+fetch('/api/intro')
+  .then(r => r.json())
+  .then(d => {
+    if (d.intro) {
+      document.getElementById('introUpdate').textContent = d.intro;
+    } else {
+      document.getElementById('dispatch').style.display = 'none';
+    }
+  })
+  .catch(() => { document.getElementById('dispatch').style.display = 'none'; });
+</script>
+</body>
+</html>
