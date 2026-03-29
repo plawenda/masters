@@ -97,7 +97,7 @@
     .intro-inner {
       max-width: 1300px;
       margin: auto;
-      padding: 16px 20px;
+      padding: 14px 20px;
       display: flex;
       align-items: center;
       gap: 12px;
@@ -109,13 +109,34 @@
       background: var(--green);
       flex-shrink: 0;
     }
-    .intro-text {
+    .intro-welcome {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .dispatch {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 0 20px 14px 39px;
+    }
+    .dispatch-label {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 6px;
+    }
+    .dispatch-text {
       font-family: 'Playfair Display', serif;
       font-style: italic;
       font-size: 14px;
-      color: var(--text-muted);
-      line-height: 1.6;
-      min-height: 20px;
+      color: var(--text);
+      line-height: 1.7;
+      border-left: 2px solid var(--gold);
+      padding-left: 14px;
     }
     .intro-shimmer {
       display: inline-block;
@@ -195,7 +216,11 @@
 <div class="intro-banner">
   <div class="intro-inner">
     <div class="intro-dot"></div>
-    <div class="intro-text">Welcome to the Masters Pool! We hope this adds to your enjoyment of the tournament. The leaderboard refreshes every 60 seconds with live data from DataGolf. <span id="introUpdate"><span class="intro-shimmer"></span></span></div>
+    <div class="intro-welcome">Welcome to the Masters Pool! We hope this adds to your enjoyment of the tournament. The leaderboard refreshes every 60 seconds with live data from DataGolf.</div>
+  </div>
+  <div class="dispatch" id="dispatch">
+    <div class="dispatch-label">Tournament Dispatch</div>
+    <div class="dispatch-text" id="introUpdate"><span class="intro-shimmer"></span></div>
   </div>
 </div>
 
@@ -212,8 +237,14 @@
 // Load AI intro
 fetch('/api/intro')
   .then(r => r.json())
-  .then(d => { document.getElementById('introUpdate').textContent = d.intro || ''; })
-  .catch(() => { document.getElementById('introUpdate').textContent = ''; });
+  .then(d => {
+    if (d.intro) {
+      document.getElementById('introUpdate').textContent = d.intro;
+    } else {
+      document.getElementById('dispatch').style.display = 'none';
+    }
+  })
+  .catch(() => { document.getElementById('dispatch').style.display = 'none'; });
 
 function formatMoney(value) {
   const raw = value?.toString().replace(/[^\d.-]/g, '');
