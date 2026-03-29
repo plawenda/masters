@@ -496,7 +496,7 @@ loadTSV(detailedUrl, 'ourLeaderboard').then(data => {
     summaryDiv.style.display = 'block';
   }
 
-  const savedNames = JSON.parse(localStorage.getItem('selectedDetailedTeamNames') || '[]');
+  const savedNames = JSON.parse(localStorage.getItem('selectedTeamNames') || '[]');
   savedNames.forEach(name => choices.setChoiceByValue(name));
   document.querySelectorAll("#ourLeaderboard tbody tr").forEach((r, i) => {
     const teamName = teamRows[i][1];
@@ -506,7 +506,7 @@ loadTSV(detailedUrl, 'ourLeaderboard').then(data => {
 
   teamSelect.addEventListener("change", function () {
     const selected = Array.from(this.selectedOptions).map(o => o.value);
-    localStorage.setItem('selectedDetailedTeamNames', JSON.stringify(selected));
+    localStorage.setItem('selectedTeamNames', JSON.stringify(selected));
     document.querySelectorAll("#ourLeaderboard tbody tr").forEach((r, i) => {
       r.classList.toggle("highlight", selected.includes(teamRows[i][1]));
     });
