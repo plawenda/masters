@@ -297,7 +297,7 @@
 <header>
   <img class="logo" src="masters_pool_logo.png" alt="Masters Pool Logo">
   <div class="site-title">Masters Pool</div>
-  <div class="site-subtitle">Augusta National · 2025</div>
+  <div class="site-subtitle">Augusta National · <span id="year"></span></div>
 </header>
 
 <nav>
@@ -323,7 +323,7 @@
 <div class="container">
 
   <div class="rules-masthead">
-    <div class="rules-eyebrow">Augusta National · 2025</div>
+    <div class="rules-eyebrow">Augusta National · <span id="year"></span></div>
     <h1 class="rules-title">Pool Rules</h1>
     <div class="rules-divider">
       <div class="rules-divider-line"></div>
@@ -386,6 +386,7 @@
 </div>
 
 <script>
+document.getElementById('year').textContent = new Date().getFullYear();
 fetch('/api/intro')
   .then(r => r.json())
   .then(d => {

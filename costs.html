@@ -202,7 +202,7 @@
 <header>
   <img class="logo" src="masters_pool_logo.png" alt="Masters Pool Logo">
   <div class="site-title">Masters Pool</div>
-  <div class="site-subtitle">Augusta National · 2025</div>
+  <div class="site-subtitle">Augusta National · <span id="year"></span></div>
 </header>
 
 <nav>
@@ -235,6 +235,7 @@
 </div>
 
 <script>
+document.getElementById('year').textContent = new Date().getFullYear();
 // Load AI intro
 fetch('/api/intro')
   .then(r => r.json())
