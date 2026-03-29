@@ -45,12 +45,12 @@
           transparent 8px
         ),
         linear-gradient(to bottom, #007a54 0%, #005c3d 100%);
-      padding: 36px 20px 28px;
+      padding: 24px 20px 20px;
       text-align: center;
       border-bottom: 2px solid var(--gold);
       position: relative;
     }
-    .logo { height: 180px; }
+    .logo { height: 140px; }
     .site-title {
       font-family: 'Playfair Display', serif;
       color: #ffffff;
@@ -94,57 +94,34 @@
     nav a:hover { color: var(--green); }
     nav a.active { color: var(--green); border-bottom-color: var(--green); }
 
-    .intro-banner {
+    .dispatch-strip {
       background: var(--surface);
       border-bottom: 1px solid var(--border);
-    }
-    .intro-inner {
-      max-width: 1300px;
-      margin: auto;
-      padding: 14px 20px;
       display: flex;
       align-items: center;
       gap: 12px;
+      padding: 10px 24px;
     }
-    .intro-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--green);
-      flex-shrink: 0;
-    }
-    .intro-welcome {
+    .dispatch-label-inline {
       font-family: 'DM Sans', sans-serif;
-      font-size: 15px;
-      color: var(--text-muted);
-      line-height: 1.5;
-    }
-    .dispatch {
-      max-width: 1300px;
-      margin: 0 auto;
-      padding: 0 20px 14px 39px;
-    }
-    .dispatch-label {
-      font-family: 'DM Sans', sans-serif;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
       letter-spacing: 2px;
       text-transform: uppercase;
       color: var(--gold);
-      margin-bottom: 6px;
+      flex-shrink: 0;
+      white-space: nowrap;
     }
     .dispatch-text {
       font-family: 'Playfair Display', serif;
       font-style: italic;
       font-size: 15px;
       color: var(--text);
-      line-height: 1.7;
-      border-left: 2px solid var(--gold);
-      padding-left: 14px;
+      line-height: 1.5;
     }
     .intro-shimmer {
       display: inline-block;
-      width: 340px;
+      width: min(480px, 70vw);
       height: 14px;
       background: linear-gradient(90deg, var(--border) 25%, var(--surface2) 50%, var(--border) 75%);
       background-size: 200% 100%;
@@ -153,6 +130,17 @@
       vertical-align: middle;
     }
     @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    @media (max-width: 600px) {
+      .logo { height: 80px; }
+      header { padding: 16px 20px 14px; }
+      .site-title { font-size: 26px; }
+      .site-subtitle { font-size: 13px; letter-spacing: 2px; }
+      .dispatch-strip { padding: 8px 16px; gap: 6px; }
+      .dispatch-label-inline { display: none; }
+      .dispatch-text { font-size: 14px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+      nav a { padding: 11px 10px; font-size: 13px; letter-spacing: 0.8px; }
+    }
 
     .container { max-width: 1300px; margin: auto; padding: 24px 20px; }
 
@@ -331,15 +319,9 @@
   <a href="rules.html">Rules</a>
 </nav>
 
-<div class="intro-banner">
-  <div class="intro-inner">
-    <div class="intro-dot"></div>
-    <div class="intro-welcome">Welcome to the Masters Pool! We hope this adds to your enjoyment of the tournament. The leaderboard refreshes every 60 seconds with live data from DataGolf.</div>
-  </div>
-  <div class="dispatch" id="dispatch">
-    <div class="dispatch-label">Tournament Dispatch</div>
-    <div class="dispatch-text" id="introUpdate"><span class="intro-shimmer"></span></div>
-  </div>
+<div class="dispatch-strip" id="dispatch">
+  <span class="dispatch-label-inline">Dispatch</span>
+  <span class="dispatch-text" id="introUpdate"><span class="intro-shimmer"></span></span>
 </div>
 
 <div class="container">
