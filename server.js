@@ -21,7 +21,7 @@ app.get('/api/intro', async (req, res) => {
     const messages = [
       {
         role: 'user',
-        content: `Search the web for the latest news on the Masters Tournament at Augusta National. Today's date is ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}. If the tournament has not yet started, preview the field and storylines to watch. If the tournament is currently underway, give the latest leaderboard update and key moments. If the tournament has recently concluded, summarize the champion and how it unfolded. Write your response in the style of a 1930s sports journalist — colorful, dramatic, authoritative. About 150 words. Address the reader directly as visitors to a golf pool website tracking the action.`
+        content: `Search the web for the latest news on the Masters Tournament at Augusta National. Today's date is ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}. If the tournament has not yet started, preview the field and storylines to watch. If the tournament is currently underway, give the latest leaderboard update and key moments. If the tournament has recently concluded, summarize the champion and how it unfolded. Write your response in the style of a 1930s sports journalist — colorful, dramatic, authoritative. About 150 words. Address the reader directly as visitors to a golf pool website tracking the action. Write in plain prose only — no markdown, no bold, no bullet points, no headers, no asterisks, no dashes. Just flowing sentences and paragraphs.`
       }
     ];
 
