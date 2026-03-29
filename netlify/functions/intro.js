@@ -30,11 +30,8 @@ Rules: plain text only, no markdown, no asterisks, no bullet points. 1-2 sentenc
       ]
     });
 
-    const update = response.content
-      .filter(b => b.type === 'text')
-      .map(b => b.text)
-      .join(' ')
-      .trim() || '';
+    const textBlocks = response.content.filter(b => b.type === 'text');
+    const update = textBlocks.length ? textBlocks[textBlocks.length - 1].text.trim() : '';
 
     return {
       statusCode: 200,
