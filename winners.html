@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Masters Pool — Champions</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f9f6f0;
+      --surface: #ffffff;
+      --surface2: #f2ede4;
+      --border: #e5e0d8;
+      --green: #006747;
+      --green-dim: rgba(0,103,71,0.06);
+      --gold: #b8972e;
+      --gold-dim: rgba(184,151,46,0.12);
+      --text: #1a1a1a;
+      --text-muted: #6b7280;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      opacity: 0;
+      animation: fadeIn 0.4s ease forwards;
+    }
+    @keyframes fadeIn { to { opacity: 1; } }
+
+    header {
+      background: var(--green);
+      background-image:
+        repeating-linear-gradient(
+          45deg,
+          rgba(255,255,255,0.015) 0px,
+          rgba(255,255,255,0.015) 1px,
+          transparent 1px,
+          transparent 8px
+        ),
+        linear-gradient(to bottom, #007a54 0%, #005c3d 100%);
+      padding: 36px 20px 28px;
+      text-align: center;
+      border-bottom: 2px solid var(--gold);
+    }
+    .logo { height: 180px; }
+    .site-title {
+      font-family: 'Playfair Display', serif;
+      color: #ffffff;
+      font-size: 34px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      margin-top: 10px;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.3);
+    }
+    .site-subtitle {
+      font-family: 'DM Sans', sans-serif;
+      color: rgba(255,255,255,0.65);
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    nav {
+      background: var(--surface);
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      padding: 0;
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    nav a {
+      color: var(--text-muted);
+      padding: 14px 18px;
+      text-decoration: none;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      font-size: 14px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      border-bottom: 2px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    nav a:hover { color: var(--green); }
+    nav a.active { color: var(--green); border-bottom-color: var(--green); }
+
+    .intro-banner {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    .intro-inner {
+      max-width: 1300px;
+      margin: auto;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .intro-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      flex-shrink: 0;
+    }
+    .intro-welcome {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .dispatch {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 0 20px 14px 39px;
+    }
+    .dispatch-label {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 6px;
+    }
+    .dispatch-text {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 15px;
+      color: var(--text);
+      line-height: 1.7;
+      border-left: 2px solid var(--gold);
+      padding-left: 14px;
+    }
+    .intro-shimmer {
+      display: inline-block;
+      width: 340px;
+      height: 14px;
+      background: linear-gradient(90deg, var(--border) 25%, var(--surface2) 50%, var(--border) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 4px;
+      vertical-align: middle;
+    }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    .container {
+      max-width: 820px;
+      margin: auto;
+      padding: 48px 20px 80px;
+    }
+
+    .page-masthead {
+      text-align: center;
+      margin-bottom: 52px;
+    }
+    .page-eyebrow {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 12px;
+    }
+    .page-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 48px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.1;
+      margin: 0 0 12px;
+    }
+    .page-subtitle {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      color: var(--text-muted);
+      font-weight: 400;
+      margin: 0;
+    }
+    .page-divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      justify-content: center;
+      margin-top: 24px;
+    }
+    .page-divider-line {
+      height: 1px;
+      width: 60px;
+      background: var(--gold);
+    }
+    .page-divider-diamond {
+      width: 6px;
+      height: 6px;
+      background: var(--gold);
+      transform: rotate(45deg);
+      flex-shrink: 0;
+    }
+
+    /* Champions table */
+    .champions-table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .champions-table-wrap table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .champions-table-wrap thead th {
+      background: var(--green);
+      color: rgba(255,255,255,0.85);
+      padding: 13px 20px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      text-align: left;
+      border-bottom: none;
+    }
+    .champions-table-wrap thead th.col-year { width: 80px; }
+    .champions-table-wrap tbody td {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      color: var(--text);
+      vertical-align: middle;
+    }
+    .champions-table-wrap tbody tr:last-child td { border-bottom: none; }
+    .champions-table-wrap tbody tr:hover { background: var(--green-dim); }
+
+    .year-cell {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--gold);
+    }
+    .pool-winner-cell {
+      font-weight: 600;
+      font-size: 16px;
+    }
+    .pool-winner-cell.unknown {
+      color: var(--text-muted);
+      font-style: italic;
+      font-weight: 400;
+    }
+    .masters-champ-cell {
+      color: var(--text-muted);
+      font-size: 15px;
+    }
+    .trophy-icon {
+      margin-right: 8px;
+      font-size: 15px;
+      opacity: 0.7;
+    }
+
+    /* Highlight most recent */
+    .champions-table-wrap tbody tr.is-latest {
+      background: var(--gold-dim);
+    }
+    .champions-table-wrap tbody tr.is-latest td {
+      border-bottom: 1px solid rgba(184,151,46,0.2);
+    }
+    .latest-badge {
+      display: inline-block;
+      background: var(--gold);
+      color: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 2px;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+
+    .footnote {
+      margin-top: 24px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <img class="logo" src="masters_pool_logo.png" alt="Masters Pool Logo">
+  <div class="site-title">Masters Pool</div>
+  <div class="site-subtitle">Augusta National · <span id="year"></span></div>
+</header>
+
+<nav>
+  <a href="index.html">Live Leaderboard</a>
+  <a href="detailed.html">Detailed Leaderboard</a>
+  <a href="costs.html">Golfer Costs</a>
+  <a href="prizes.html">Prize Money</a>
+  <a href="payouts.html">Pool Payouts</a>
+  <a href="winners.html" class="active">Champions</a>
+  <a href="rules.html">Rules</a>
+</nav>
+
+<div class="intro-banner">
+  <div class="intro-inner">
+    <div class="intro-dot"></div>
+    <div class="intro-welcome">Welcome to the Masters Pool! We hope this adds to your enjoyment of the tournament. The leaderboard refreshes every 60 seconds with live data from DataGolf.</div>
+  </div>
+  <div class="dispatch" id="dispatch">
+    <div class="dispatch-label">Tournament Dispatch</div>
+    <div class="dispatch-text" id="introUpdate"><span class="intro-shimmer"></span></div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="page-masthead">
+    <div class="page-eyebrow">Since 2011</div>
+    <h1 class="page-title">Champions</h1>
+    <p class="page-subtitle">The names etched in Masters Pool lore — pool winners alongside the champion who carried their picks.</p>
+    <div class="page-divider">
+      <div class="page-divider-line"></div>
+      <div class="page-divider-diamond"></div>
+      <div class="page-divider-line"></div>
+    </div>
+  </div>
+
+  <div class="champions-table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="col-year">Year</th>
+          <th>Pool Winner</th>
+          <th>Masters Champion</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="is-latest">
+          <td class="year-cell">2025</td>
+          <td class="pool-winner-cell">Brandon Schmidt <span class="latest-badge">Defending</span></td>
+          <td class="masters-champ-cell"><span class="trophy-icon">🏆</span>Rory McIlroy</td>
+        </tr>
+        <tr>
+          <td class="year-cell">2024</td>
+          <td class="pool-winner-cell">Jason Olmsted</td>
+          <td class="masters-champ-cell"><span class="trophy-icon">🏆</span>Scottie Scheffler</td>
+        </tr>
+        <tr>
+          <td class="year-cell">2023</td>
+          <td class="pool-winner-cell">Tom Bogey</td>
+          <td class="masters-champ-cell"><span class="trophy-icon">🏆</span>Jon Rahm</td>
+        </tr>
+        <tr>
+          <td class="year-cell">2022</td>
+          <td class="pool-winner-cell">Fighting Mongooses</td>
+          <td class="masters-champ-cell"><span class="trophy-icon">🏆</span>Scottie Scheffler</td>
+        </tr>
+        <tr>
+          <td class="year-cell">2021</td>
+          <td class="pool-winner-cell">The Dream Team</td>
+          <td class="masters-champ-cell"><span class="trophy-icon">🏆</span>Hideki Matsuyama</td>
+        </tr>
+        <tr>
+          <td class="year-cell">2020</td>
+          <td class="pool-winner-cell">Lenvin 1</td>
+          <td class="masters-champ-cell"><span class="trophy-icon">🏆</span>Dustin Johnson</td>
+        </tr>
+        <tr>
+          <td class="year-cell">2019</td>
+          <td class="pool-winner-cell">Chris Pappas</td>
+          <td class="masters-champ-cell"><span class="trophy-icon">🏆</span>Tiger Woods</td>
+        </tr>
+        <tr>
+          <td class="year-cell">2018</td>
+          <td class="pool-winner-cell">Dan Finn</td>
+          <td class="masters-champ-cell"><span class="trophy-icon">🏆</span>Patrick Reed</td>
+        </tr>
+        <tr>
+          <td class="year-cell">2017</td>
+          <td class="pool-winner-cell">Michael Peabody</td>
+          <td class="masters-champ-cell"><span class="trophy-icon">🏆</span>Sergio Garcia</td>
+        </tr>
+        <tr>
+          <td class="year-cell">2016</td>
+          <td class="pool-winner-cell">Chris Caggiano</td>
+          <td class="masters-champ-cell"><span class="trophy-icon">🏆</span>Danny Willett</td>
+        </tr>
+        <tr>
+          <td class="year-cell">2015</td>
+          <td class="pool-winner-cell">Tim Leary</td>
+          <td class="masters-champ-cell"><span class="trophy-icon">🏆</span>Jordan Spieth</td>
+        </tr>
+        <tr>
+          <td class="year-cell">2014</td>
+          <td class="pool-winner-cell">Michael Torpe</td>
+          <td class="masters-champ-cell"><span class="trophy-icon">🏆</span>Bubba Watson</td>
+        </tr>
+        <tr>
+          <td class="year-cell">2013</td>
+          <td class="pool-winner-cell unknown">Unknown</td>
+          <td class="masters-champ-cell"><span class="trophy-icon">🏆</span>Adam Scott</td>
+        </tr>
+        <tr>
+          <td class="year-cell">2012</td>
+          <td class="pool-winner-cell">Dan Shapiro</td>
+          <td class="masters-champ-cell"><span class="trophy-icon">🏆</span>Bubba Watson</td>
+        </tr>
+        <tr>
+          <td class="year-cell">2011</td>
+          <td class="pool-winner-cell">Jim Lawenda</td>
+          <td class="masters-champ-cell"><span class="trophy-icon">🏆</span>Charl Schwartzel</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="footnote">2013 pool winner lost to history — do you know who it was? Let us know.</p>
+
+</div>
+
+<script>
+document.getElementById('year').textContent = new Date().getFullYear();
+fetch('/api/intro')
+  .then(r => r.json())
+  .then(d => {
+    if (d.intro) {
+      document.getElementById('introUpdate').textContent = d.intro;
+    } else {
+      document.getElementById('dispatch').style.display = 'none';
+    }
+  })
+  .catch(() => { document.getElementById('dispatch').style.display = 'none'; });
+</script>
+</body>
+</html>
