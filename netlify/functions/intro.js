@@ -16,6 +16,7 @@ exports.handler = async () => {
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 256,
       tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+      tool_choice: { type: 'any' },
       messages: [
         {
           role: 'user',
@@ -30,12 +31,12 @@ Rules: plain text only, no markdown, no asterisks, no bullet points. 1-2 sentenc
       ]
     });
 
-    const preamble = /^(I'll|I will|I'm going to|Let me|Searching|Looking up)/i;
     const update = response.content
-      .filter(b => b.type === 'text' && !preamble.test(b.text.trim()))
+      .filter(b => b.type === 'text')
       .map(b => b.text)
       .join('')
-      .trim();
+      .trim()
+      .replace(/^[,;–—\s]+/, '');
 
     return {
       statusCode: 200,
