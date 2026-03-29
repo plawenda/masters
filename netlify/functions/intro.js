@@ -30,8 +30,12 @@ Rules: plain text only, no markdown, no asterisks, no bullet points. 1-2 sentenc
       ]
     });
 
-    const textBlocks = response.content.filter(b => b.type === 'text');
-    const update = textBlocks.length ? textBlocks[textBlocks.length - 1].text.trim() : '';
+    const preamble = /^(I'll|I will|I'm going to|Let me|Searching|Looking up)/i;
+    const update = response.content
+      .filter(b => b.type === 'text' && !preamble.test(b.text.trim()))
+      .map(b => b.text)
+      .join('')
+      .trim();
 
     return {
       statusCode: 200,

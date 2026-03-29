@@ -132,17 +132,21 @@
 
     .hamburger {
       display: none;
-      position: absolute;
-      top: 50%;
-      left: 20px;
-      transform: translateY(-50%);
+      align-items: center;
+      gap: 8px;
+      padding: 13px 20px;
       background: none;
       border: none;
-      color: rgba(255,255,255,0.85);
-      font-size: 22px;
+      border-bottom: 2px solid transparent;
+      color: var(--text-muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
       cursor: pointer;
-      padding: 6px 8px;
-      line-height: 1;
+      width: 100%;
+      text-align: left;
     }
 
     @media (max-width: 600px) {
@@ -153,11 +157,11 @@
       .dispatch-strip { padding: 8px 16px; gap: 6px; }
       .dispatch-label-inline { display: none; }
       .dispatch-text { font-size: 14px; }
+      nav { flex-direction: column; align-items: stretch; }
       .hamburger { display: flex; }
-      nav { display: none; flex-direction: column; width: 100%; background: var(--surface); border-bottom: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-      nav.open { display: flex; }
-      nav a { padding: 14px 20px; font-size: 15px; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); width: 100%; border-left: none; }
-      nav a.active { border-left: 3px solid var(--green); padding-left: 17px; }
+      nav a { display: none; }
+      nav.open a { display: flex; padding: 13px 20px; font-size: 15px; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); border-left: none; width: 100%; }
+      nav.open a.active { border-left: 3px solid var(--green); padding-left: 17px; }
     }
 
     .container {
@@ -314,10 +318,10 @@
   <div class="site-title">Masters Pool</div>
   
   <div class="site-subtitle">Augusta National · <span id="year"></span></div>
-  <button class="hamburger" id="menuBtn" aria-label="Menu">&#9776;</button>
 </header>
 
 <nav>
+  <button class="hamburger" id="menuBtn" aria-label="Toggle menu">&#9776; Menu</button>
   <a href="index.html">Live Leaderboard</a>
   <a href="detailed.html">Detailed Leaderboard</a>
   <a href="costs.html">Golfer Costs</a>
