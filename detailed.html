@@ -118,6 +118,7 @@
       font-size: 15px;
       color: var(--text);
       line-height: 1.5;
+      flex: 1;
     }
     .intro-shimmer {
       display: inline-block;
@@ -312,6 +313,7 @@
   <img class="logo" src="masters_pool_logo.png" alt="Masters Pool Logo" />
   <div class="site-title">Masters Pool</div>
   
+  <div class="site-subtitle">Augusta National · <span id="year"></span></div>
   <button class="hamburger" id="menuBtn" aria-label="Menu">&#9776;</button>
 </header>
 
@@ -347,14 +349,15 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js">
-// Hamburger menu
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<script>// Hamburger menu
 const menuBtn = document.getElementById('menuBtn');
 const navEl = document.querySelector('nav');
 menuBtn.addEventListener('click', e => { e.stopPropagation(); navEl.classList.toggle('open'); });
 document.addEventListener('click', e => {
   if (!navEl.contains(e.target) && e.target !== menuBtn) navEl.classList.remove('open');
 });
+
 </script>
 <script>
 document.getElementById('year').textContent = new Date().getFullYear();
