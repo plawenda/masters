@@ -195,7 +195,7 @@
 <div class="intro-banner">
   <div class="intro-inner">
     <div class="intro-dot"></div>
-    <div class="intro-text" id="introText"><span class="intro-shimmer"></span></div>
+    <div class="intro-text">Welcome to the Masters Pool! We hope this adds to your enjoyment of the tournament. The leaderboard refreshes every 60 seconds with live data from DataGolf. <span id="introUpdate"><span class="intro-shimmer"></span></span></div>
   </div>
 </div>
 
@@ -212,8 +212,8 @@
 // Load AI intro
 fetch('/api/intro')
   .then(r => r.json())
-  .then(d => { if (d.intro) document.getElementById('introText').textContent = d.intro; })
-  .catch(() => { document.getElementById('introText').textContent = 'Welcome to the Masters Pool. Follow along as the drama unfolds at Augusta National.'; });
+  .then(d => { document.getElementById('introUpdate').textContent = d.intro || ''; })
+  .catch(() => { document.getElementById('introUpdate').textContent = ''; });
 
 function loadTSV(url, tableId) {
   return fetch(url)

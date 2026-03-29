@@ -8,29 +8,29 @@ exports.handler = async () => {
 
     const response = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 2048,
+      max_tokens: 256,
       tools: [{ type: 'web_search_20250305', name: 'web_search' }],
       messages: [
         {
           role: 'user',
-          content: `Search the web for the latest news on the Masters Tournament at Augusta National. Today's date is ${today}. If the tournament has not yet started, preview the field and storylines to watch. If the tournament is currently underway, give the latest leaderboard update and key moments. If the tournament has recently concluded, summarize the champion and how it unfolded. Write your response in the style of a 1930s sports journalist — colorful, dramatic, authoritative. About 150 words. Address the reader directly as visitors to a golf pool website tracking the action. Write in plain prose only — no markdown, no bold, no bullet points, no headers, no asterisks, no dashes. Just flowing sentences and paragraphs.`
+          content: `Search the web for one interesting or surprising fact about the Masters Tournament at Augusta National right now. Today's date is ${today}. Write exactly 1-2 plain sentences — no markdown, no bold, no bullet points, no asterisks. Just a single punchy update a golf fan would find compelling.`
         }
       ]
     });
 
-    const introText = response.content
+    const update = response.content
       .filter(b => b.type === 'text')
       .map(b => b.text)
       .join(' ')
-      .trim() || 'Welcome to the Masters Pool! Follow along as the drama unfolds at Augusta National.';
+      .trim() || '';
 
     return {
       statusCode: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, s-maxage=60'
+        'Cache-Control': 'public, s-maxage=43200, stale-while-revalidate=86400'
       },
-      body: JSON.stringify({ intro: introText })
+      body: JSON.stringify({ intro: update })
     };
   } catch (err) {
     console.error('Intro function error:', err.message);
