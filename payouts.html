@@ -249,7 +249,10 @@ fetch('/api/intro')
 
 function loadTSV(url, tableId) {
   return fetch(url)
-    .then(response => response.text())
+    .then(response => {
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return response.text();
+    })
     .then(data => {
       const rows = data.trim().split('\n').map(r => r.split('\t'));
       const headers = rows[0];
@@ -284,7 +287,7 @@ function loadTSV(url, tableId) {
 }
 
 const payoutsUrl = "/api/sheet?url=" + encodeURIComponent("https://docs.google.com/spreadsheets/d/e/2PACX-1vT_htvNiJZPFTNohWOu_fT0VjKlQQWfMFEi08SU1tlN3HHauBbe-I5O3KPbwc-WPkBR8Hdh5yEMssOl/pub?gid=1012228973&single=true&output=tsv");
-loadTSV(payoutsUrl, 'payoutsTable');
+loadTSV(payoutsUrl, 'payoutsTable').catch(() => {});
 </script>
 </body>
 </html>

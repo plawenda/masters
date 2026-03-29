@@ -364,7 +364,10 @@ function formatMoney(value) {
 
 function loadTSV(url, tableId, moneyColumnNames = []) {
   return fetch(url)
-    .then(response => response.text())
+    .then(response => {
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return response.text();
+    })
     .then(data => {
       const rows = data.trim().split('\n').map(r => r.split('\t'));
       const headers = rows[0];
@@ -467,23 +470,29 @@ loadTSV(detailedUrl, 'ourLeaderboard').then(data => {
   });
 
   function updateSummary(names) {
-    if (!names.length) return summaryDiv.style.display = 'none';
-    let html = '<table><thead><tr>';
-    teamHeaders.forEach(h => html += `<th>${h}</th>`);
-    html += '</tr></thead><tbody>';
+    if (!names.length) { summaryDiv.style.display = 'none'; return; }
+    const table = document.createElement('table');
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    teamHeaders.forEach(h => { const th = document.createElement('th'); th.textContent = h; headerRow.appendChild(th); });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+    const tbody = document.createElement('tbody');
     names.forEach(name => {
       const match = teamRows.find(r => r[1] === name);
       if (match) {
-        html += '<tr>';
+        const tr = document.createElement('tr');
         match.forEach((cell, i) => {
-          const header = teamHeaders[i];
-          html += `<td>${header.toLowerCase().includes('earn') ? formatMoney(cell) : cell}</td>`;
+          const td = document.createElement('td');
+          td.textContent = teamHeaders[i]?.toLowerCase().includes('earn') ? formatMoney(cell) : cell;
+          tr.appendChild(td);
         });
-        html += '</tr>';
+        tbody.appendChild(tr);
       }
     });
-    html += '</tbody></table>';
-    summaryDiv.innerHTML = html;
+    table.appendChild(tbody);
+    summaryDiv.innerHTML = '';
+    summaryDiv.appendChild(table);
     summaryDiv.style.display = 'block';
   }
 
@@ -503,7 +512,7 @@ loadTSV(detailedUrl, 'ourLeaderboard').then(data => {
     });
     updateSummary(selected);
   });
-});
+}).catch(() => {});
 </script>
 </body>
 </html>

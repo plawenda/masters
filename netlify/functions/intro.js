@@ -2,6 +2,12 @@ const Anthropic = require('@anthropic-ai/sdk');
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+const ALLOWED_ORIGIN = process.env.URL || 'https://masters-pool.org';
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
+  'Access-Control-Allow-Methods': 'GET',
+};
+
 exports.handler = async () => {
   try {
     const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
@@ -28,7 +34,8 @@ exports.handler = async () => {
       statusCode: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, s-maxage=43200, stale-while-revalidate=86400'
+        'Cache-Control': 'public, s-maxage=43200, stale-while-revalidate=86400',
+        ...CORS_HEADERS
       },
       body: JSON.stringify({ intro: update })
     };
@@ -36,7 +43,7 @@ exports.handler = async () => {
     console.error('Intro function error:', err.message);
     return {
       statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
       body: JSON.stringify({ intro: 'Welcome to the Masters Pool! Follow along as the drama unfolds at Augusta National.' })
     };
   }

@@ -1,4 +1,9 @@
 const ALLOWED_BASE = 'https://docs.google.com/spreadsheets/';
+const ALLOWED_ORIGIN = process.env.URL || 'https://masters-pool.org';
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
+  'Access-Control-Allow-Methods': 'GET',
+};
 
 exports.handler = async (event) => {
   const url = event.queryStringParameters?.url;
@@ -21,7 +26,8 @@ exports.handler = async (event) => {
       statusCode: 200,
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
-        'Cache-Control': 'public, s-maxage=60'
+        'Cache-Control': 'public, s-maxage=60',
+        ...CORS_HEADERS
       },
       body: text
     };

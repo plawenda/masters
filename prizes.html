@@ -255,7 +255,10 @@ function formatMoney(value) {
 
 function loadTSV(url, tableId, moneyColumnNames = []) {
   return fetch(url)
-    .then(response => response.text())
+    .then(response => {
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return response.text();
+    })
     .then(data => {
       const rows = data.trim().split('\n').map(r => r.split('\t'));
       const headers = rows[0];
@@ -286,7 +289,7 @@ function loadTSV(url, tableId, moneyColumnNames = []) {
 }
 
 const prizesUrl = "/api/sheet?url=" + encodeURIComponent("https://docs.google.com/spreadsheets/d/e/2PACX-1vT_htvNiJZPFTNohWOu_fT0VjKlQQWfMFEi08SU1tlN3HHauBbe-I5O3KPbwc-WPkBR8Hdh5yEMssOl/pub?gid=206557939&single=true&output=tsv");
-loadTSV(prizesUrl, 'prizeMoney', ['prize', 'money', 'purse', 'amount', 'earn']);
+loadTSV(prizesUrl, 'prizeMoney', ['prize', 'money', 'purse', 'amount', 'earn']).catch(() => {});
 </script>
 </body>
 </html>
