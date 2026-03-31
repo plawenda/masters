@@ -63,6 +63,31 @@ function fmtThru(thru) {
   return n >= 18 ? 'F' : `${n}`;
 }
 
+// ---------- Flexible field extraction ----------
+// We don't know the exact field names DataGolf returns, so try multiple candidates.
+
+function playerName(p) {
+  return (p.player_name || p.name || p.full_name || p.player || '').toString().trim();
+}
+
+function playerPosition(p) {
+  // Try all known DataGolf field names for position
+  const raw = p.position ?? p.current_pos ?? p.pos ?? p.fin_text ?? p.finish ?? p.finish_pos ?? null;
+  return raw != null ? raw.toString().trim() : null;
+}
+
+function playerTotal(p) {
+  return p.total ?? p.total_score ?? p.total_strokes ?? p.score ?? null;
+}
+
+function playerToday(p) {
+  return p.today ?? p.today_score ?? p.round_score ?? p.current_round_score ?? null;
+}
+
+function playerThru(p) {
+  return p.thru ?? p.thru_hole ?? p.holes_played ?? p.hole ?? null;
+}
+
 // ---------- Fetch helpers ----------
 
 async function fetchLiveScores() {
@@ -71,9 +96,17 @@ async function fetchLiveScores() {
     const r = await fetch(WORKER_URL, { signal: AbortSignal.timeout(8000) });
     if (!r.ok) throw new Error(`Worker ${r.status}`);
     json = await r.json();
+    const players = json.live_stats || [];
+    // Log first player's fields so we can verify field names in Netlify logs
+    if (players.length > 0) {
+      console.log('[leaderboard] Worker response keys on first player:', Object.keys(players[0]).join(', '));
+      console.log('[leaderboard] First player sample:', JSON.stringify(players[0]).slice(0, 300));
+    } else {
+      console.log('[leaderboard] Worker returned empty live_stats. Full response keys:', Object.keys(json).join(', '));
+    }
     // Primary worker shape: { live_stats, course_name, event_name, last_updated }
     return {
-      players:     json.live_stats || [],
+      players,
       eventName:   json.event_name || 'Masters Tournament',
       lastUpdated: json.last_updated || new Date().toISOString(),
     };
@@ -82,9 +115,13 @@ async function fetchLiveScores() {
     const r = await fetch(WORKER_BACKUP_URL, { signal: AbortSignal.timeout(8000) });
     if (!r.ok) throw new Error(`Backup worker ${r.status}`);
     json = await r.json();
+    const players = json.data || [];
+    if (players.length > 0) {
+      console.log('[leaderboard] Backup worker keys on first player:', Object.keys(players[0]).join(', '));
+    }
     // Backup shape: { data, info: { event_name, last_update } }
     return {
-      players:     json.data || [],
+      players,
       eventName:   json.info?.event_name || 'Masters Tournament',
       lastUpdated: json.info?.last_update || new Date().toISOString(),
     };
@@ -92,7 +129,9 @@ async function fetchLiveScores() {
 }
 
 async function fetchPoolEntries() {
-  const r = await fetch(TEAMS_TSV_URL, { signal: AbortSignal.timeout(8000) });
+  // Add timestamp to bypass Google's published-sheet cache (~5-15 min otherwise)
+  const url = TEAMS_TSV_URL + '&_t=' + Date.now();
+  const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
   if (!r.ok) throw new Error(`Sheets ${r.status}`);
   const text = await r.text();
   const rows = text.trim().split('\n').map(r => r.split('\t'));
@@ -120,7 +159,7 @@ async function fetchPoolEntries() {
 function buildEarningsMap(players) {
   const byPos = {};
   for (const p of players) {
-    const pos = parsePosition(p.position ?? p.current_pos);
+    const pos = parsePosition(playerPosition(p));
     if (pos === null) continue;
     if (!byPos[pos]) byPos[pos] = [];
     byPos[pos].push(p);
@@ -135,7 +174,8 @@ function buildEarningsMap(players) {
     }
     const each = Math.round(total / tied.length);
     for (const p of tied) {
-      earningsMap[normalizeName(p.player_name)] = each;
+      const name = playerName(p);
+      if (name) earningsMap[normalizeName(name)] = each;
     }
   }
   return earningsMap;
@@ -143,10 +183,11 @@ function buildEarningsMap(players) {
 
 // Compute pool standings from entries + live players
 function computeStandings(entries, players, earningsMap) {
-  // Build quick lookup for player data
+  // Build quick lookup for player data using flexible name extraction
   const playerMap = {};
   for (const p of players) {
-    playerMap[normalizeName(p.player_name)] = p;
+    const name = playerName(p);
+    if (name) playerMap[normalizeName(name)] = p;
   }
 
   const teams = entries.map(entry => {
@@ -155,15 +196,16 @@ function computeStandings(entries, players, earningsMap) {
       const key      = normalizeName(name);
       const player   = playerMap[key];
       const earnings = earningsMap[key] ?? 0;
-      const posStr   = (player?.position ?? player?.current_pos ?? '').toString().toUpperCase().trim();
+      const posRaw   = player ? playerPosition(player) : null;
+      const posStr   = posRaw ? posRaw.toString().toUpperCase().trim() : '';
       const inactive = isInactive(posStr);
       totalEarnings += earnings;
       return {
         name,
-        position: player ? (player.position ?? player.current_pos ?? '-') : '?',
-        score:    player ? fmtScore(player.total ?? player.total_score) : '-',
-        today:    player ? fmtScore(player.today ?? player.today_score) : '-',
-        thru:     player ? (inactive ? posStr : fmtThru(player.thru)) : '-',
+        position: player ? (posRaw ?? '-') : '?',
+        score:    player ? fmtScore(playerTotal(player)) : '-',
+        today:    player ? fmtScore(playerToday(player)) : '-',
+        thru:     player ? (inactive ? posStr : fmtThru(playerThru(player))) : '-',
         status:   inactive ? posStr.toLowerCase() : 'active',
         earnings,
       };
@@ -189,16 +231,18 @@ function computeStandings(entries, players, earningsMap) {
 // Build Masters leaderboard array from raw players
 function buildMastersLeaderboard(players, earningsMap) {
   return players.map(p => {
-    const posStr   = (p.position ?? p.current_pos ?? '').toString().toUpperCase().trim();
+    const name     = playerName(p);
+    const posRaw   = playerPosition(p);
+    const posStr   = posRaw ? posRaw.toString().toUpperCase().trim() : '';
     const inactive = isInactive(posStr);
     return {
-      name:     p.player_name,
-      position: p.position ?? p.current_pos ?? '-',
-      score:    fmtScore(p.total ?? p.total_score),
-      today:    fmtScore(p.today ?? p.today_score),
-      thru:     inactive ? posStr : fmtThru(p.thru),
+      name,
+      position: posRaw ?? '-',
+      score:    fmtScore(playerTotal(p)),
+      today:    fmtScore(playerToday(p)),
+      thru:     inactive ? posStr : fmtThru(playerThru(p)),
       status:   inactive ? posStr.toLowerCase() : 'active',
-      earnings: earningsMap[normalizeName(p.player_name)] ?? 0,
+      earnings: name ? (earningsMap[normalizeName(name)] ?? 0) : 0,
     };
   });
 }
