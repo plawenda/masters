@@ -268,7 +268,7 @@ fetch('/api/intro')
 function formatMoney(value) {
   const raw = value?.toString().replace(/[^\d.-]/g, '');
   const num = parseFloat(raw);
-  return !isNaN(num) ? '$' + Math.round(num).toLocaleString('en-US') : value;
+  return !isNaN(num) ? '$' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : value;
 }
 
 function loadTSV(url, tableId, moneyColumnNames = []) {
