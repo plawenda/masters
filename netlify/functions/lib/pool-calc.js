@@ -8,6 +8,9 @@ const WORKER_BACKUP_URL = 'https://datagolf-v2.patrick-lawenda.workers.dev/';
 // RawTeamData tab (gid=0) — must be published via File → Share → Publish to web
 const TEAMS_TSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT_htvNiJZPFTNohWOu_fT0VjKlQQWfMFEi08SU1tlN3HHauBbe-I5O3KPbwc-WPkBR8Hdh5yEMssOl/pub?gid=0&single=true&output=tsv';
 
+// Payouts tab (gid=206557939) — position → prize money, positions 1-70
+const PAYOUTS_TSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT_htvNiJZPFTNohWOu_fT0VjKlQQWfMFEi08SU1tlN3HHauBbe-I5O3KPbwc-WPkBR8Hdh5yEMssOl/pub?gid=206557939&single=true&output=tsv';
+
 // 2025 Masters purse ($20M total) — verify and update before 2026 if purse changes
 const PURSE = {
    1: 3600000,  2: 2160000,  3: 1360000,  4:  960000,  5:  800000,
@@ -178,10 +181,32 @@ async function fetchPoolEntries() {
     .filter(e => e.name && e.golfers.length);
 }
 
+async function fetchPayoutTable() {
+  const url = PAYOUTS_TSV_URL + '&_t=' + Date.now();
+  const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+  if (!r.ok) throw new Error(`Payouts sheet ${r.status}`);
+  const text = await r.text();
+  const rows = text.trim().split('\n').map(r => r.split('\t'));
+  if (rows.length < 2) return {};
+
+  // Skip header row; expect col 0 = position number, col 1 = dollar amount
+  // Amount parser strips $, commas, spaces so both "50000" and "$50,000" work
+  const map = {};
+  for (const row of rows.slice(1)) {
+    const pos    = parseInt(row[0], 10);
+    const amount = parseFloat((row[1] || '').replace(/[^0-9.]/g, ''));
+    if (!isNaN(pos) && !isNaN(amount)) map[pos] = Math.round(amount);
+  }
+  return map;
+}
+
 // ---------- Calculation ----------
 
 // Builds a map of normalizedName → expected earnings, handling ties via purse averaging
-function buildEarningsMap(players) {
+// payoutMap: live table from Google Sheets; falls back to hardcoded PURSE if empty
+function buildEarningsMap(players, payoutMap) {
+  const payout = (payoutMap && Object.keys(payoutMap).length) ? payoutMap : PURSE;
+
   const byPos = {};
   for (const p of players) {
     const pos = parsePosition(playerPosition(p));
@@ -195,7 +220,7 @@ function buildEarningsMap(players) {
     const startPos = parseInt(posStr, 10);
     let total = 0;
     for (let i = startPos; i < startPos + tied.length; i++) {
-      total += PURSE[i] || 0;
+      total += payout[i] || 0;
     }
     const each = Math.round(total / tied.length);
     for (const p of tied) {
@@ -316,6 +341,7 @@ module.exports = {
   fmtThru,
   fetchLiveScores,
   fetchPoolEntries,
+  fetchPayoutTable,
   fetchSGStats,
   buildEarningsMap,
   computeStandings,

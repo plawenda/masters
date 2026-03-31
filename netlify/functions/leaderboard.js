@@ -1,8 +1,8 @@
 'use strict';
 
 const { getStore }           = require('@netlify/blobs');
-const { fetchLiveScores, fetchPoolEntries, fetchSGStats, buildEarningsMap,
-        computeStandings, buildMastersLeaderboard, normalizeName } = require('./lib/pool-calc');
+const { fetchLiveScores, fetchPoolEntries, fetchPayoutTable, fetchSGStats,
+        buildEarningsMap, computeStandings, buildMastersLeaderboard, normalizeName } = require('./lib/pool-calc');
 
 const ALLOWED_ORIGIN = process.env.URL || 'https://masters-pool.org';
 const CORS_HEADERS = {
@@ -57,11 +57,12 @@ function computeMovement(entryName, currentRank, snapshots) {
 
 exports.handler = async () => {
   try {
-    const [scoreData, entries, snapshots, sgMap] = await Promise.all([
+    const [scoreData, entries, snapshots, sgMap, payoutMap] = await Promise.all([
       fetchLiveScores(),
       fetchPoolEntries(),
       getTodaySnapshots(),
       fetchSGStats().catch(e => { console.warn('SG fetch failed:', e.message); return {}; }),
+      fetchPayoutTable().catch(e => { console.warn('Payout table failed, using hardcoded PURSE:', e.message); return {}; }),
     ]);
 
     if (!scoreData.players.length) {
@@ -72,7 +73,7 @@ exports.handler = async () => {
       };
     }
 
-    const earningsMap        = buildEarningsMap(scoreData.players);
+    const earningsMap        = buildEarningsMap(scoreData.players, payoutMap);
     const standings          = computeStandings(entries, scoreData.players, earningsMap);
     const mastersLeaderboard = buildMastersLeaderboard(scoreData.players, earningsMap).map(p => ({
       ...p,
