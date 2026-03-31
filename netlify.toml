@@ -11,3 +11,11 @@
   from = "/api/sheet"
   to = "/.netlify/functions/sheet"
   status = 200
+
+[[redirects]]
+  from = "/api/leaderboard"
+  to = "/.netlify/functions/leaderboard"
+  status = 200
+
+[functions."leaderboard-snapshot"]
+  schedule = "*/15 * * * *"

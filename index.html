@@ -333,8 +333,17 @@
 
     .info-bar table thead th { background: transparent; color: var(--text-muted); padding: 0; font-size: 14px; letter-spacing: 0; text-transform: none; position: static; border: none; }
 
-    .move-up   { color: #15803d; font-size: 11px; margin-left: 5px; vertical-align: middle; font-weight: 700; letter-spacing: 0; }
-    .move-down { color: #dc2626; font-size: 11px; margin-left: 5px; vertical-align: middle; font-weight: 700; letter-spacing: 0; }
+    .move-up   { color: #15803d; font-size: 11px; margin-left: 4px; vertical-align: middle; font-weight: 700; letter-spacing: 0; }
+    .move-down { color: #dc2626; font-size: 11px; margin-left: 4px; vertical-align: middle; font-weight: 700; letter-spacing: 0; }
+
+    .spark-cell { width: 72px; text-align: center; padding: 4px 6px; }
+    .sparkline-svg { display: block; margin: 0 auto; overflow: visible; }
+    .today-cell { white-space: nowrap; text-align: center; min-width: 44px; }
+    .peak-badge { color: var(--gold); font-size: 10px; margin-left: 4px; vertical-align: middle; cursor: default; }
+    .score-neg { color: #15803d; font-weight: 600; }
+    .score-pos { color: #dc2626; }
+    .status-cut td, .status-wd, .status-dq { opacity: 0.5; }
+    .update-time { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text-muted); letter-spacing: 0.5px; }
   </style>
 </head>
 <body>
@@ -364,7 +373,7 @@
 
 <div class="container">
   <div class="info-bar">
-    <table id="lastUpdatedTable"></table>
+    <span id="lastUpdatedBar" class="update-time"></span>
   </div>
 
   <div class="selector-card">
@@ -408,189 +417,198 @@ document.addEventListener('click', e => {
 </script>
 <script>
 document.getElementById('year').textContent = new Date().getFullYear();
-// Load AI intro
+
+// Load AI dispatch
 fetch('/api/intro')
   .then(r => r.json())
   .then(d => {
-    if (d.intro) {
-      document.getElementById('introUpdate').textContent = d.intro;
-    } else {
-      document.getElementById('dispatch').style.display = 'none';
-    }
+    if (d.intro) document.getElementById('introUpdate').textContent = d.intro;
+    else document.getElementById('dispatch').style.display = 'none';
   })
   .catch(() => { document.getElementById('dispatch').style.display = 'none'; });
 
-function formatMoney(value) {
-  const raw = value?.toString().replace(/[^\d.-]/g, '');
-  const num = parseFloat(raw);
-  return !isNaN(num) ? '$' + Math.round(num).toLocaleString('en-US') : value;
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function getMoneyColumnIndices(headers, moneyColumnNames) {
-  return headers.map((h, i) => {
-    return moneyColumnNames.some(name => h.trim().toLowerCase().includes(name.toLowerCase())) ? i : -1;
-  }).filter(i => i !== -1);
+function formatMoney(n) {
+  if (!n && n !== 0) return '—';
+  return '$' + Math.round(n).toLocaleString('en-US');
 }
 
-function loadTSV(url, tableId, moneyColumnNames = [], extraFormatIndex = null) {
-  return fetch(url)
-    .then(response => {
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return response.text();
-    })
-    .then(data => {
-      const rows = data.trim().split('\n').map(r => r.split('\t'));
-      const headers = rows[0];
-      const moneyIndices = getMoneyColumnIndices(headers, moneyColumnNames);
-      const table = document.getElementById(tableId);
-      const thead = document.createElement('thead');
-      const headerRow = document.createElement('tr');
-      headers.forEach(h => {
-        const th = document.createElement('th');
-        th.textContent = h;
-        headerRow.appendChild(th);
-      });
-      thead.appendChild(headerRow);
-      table.innerHTML = '';
-      table.appendChild(thead);
-      const tbody = document.createElement('tbody');
-      rows.slice(1).forEach(row => {
-        const tr = document.createElement('tr');
-        row.forEach((cell, j) => {
-          const td = document.createElement('td');
-          td.textContent = (moneyIndices.includes(j) || j === extraFormatIndex) ? formatMoney(cell) : cell;
-          tr.appendChild(td);
-        });
-        tbody.appendChild(tr);
-      });
-      table.appendChild(tbody);
-      return { headers, rows: rows.slice(1) };
-    });
+function scoreClass(s) {
+  if (!s || s === 'E' || s === '-') return '';
+  return s.startsWith('-') ? 'score-neg' : 'score-pos';
 }
 
-const leaderboardUrl = "/api/sheet?url=" + encodeURIComponent("https://docs.google.com/spreadsheets/d/e/2PACX-1vT_htvNiJZPFTNohWOu_fT0VjKlQQWfMFEi08SU1tlN3HHauBbe-I5O3KPbwc-WPkBR8Hdh5yEMssOl/pub?gid=994722150&single=true&output=tsv");
-const mastersUrl = "/api/sheet?url=" + encodeURIComponent("https://docs.google.com/spreadsheets/d/e/2PACX-1vT_htvNiJZPFTNohWOu_fT0VjKlQQWfMFEi08SU1tlN3HHauBbe-I5O3KPbwc-WPkBR8Hdh5yEMssOl/pub?gid=1782015386&single=true&output=tsv");
-const updateUrl = "/api/sheet?url=" + encodeURIComponent("https://docs.google.com/spreadsheets/d/e/2PACX-1vT_htvNiJZPFTNohWOu_fT0VjKlQQWfMFEi08SU1tlN3HHauBbe-I5O3KPbwc-WPkBR8Hdh5yEMssOl/pub?gid=878213226&single=true&output=tsv");
-
-function getStoredPositions(key) {
-  try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch { return {}; }
-}
-
-function parseRank(val) {
-  if (val == null) return null;
-  const n = parseInt(val.toString().replace(/\D/g, ''), 10);
-  return isNaN(n) ? null : n;
-}
-
-function applyMovementIndicators(tableId, rows, nameColIndex, storageKey) {
-  const prev = getStoredPositions(storageKey);
-  const toSave = {};
-  const tbody = document.querySelector('#' + tableId + ' tbody');
-  if (!tbody) return;
-  tbody.querySelectorAll('tr').forEach(function(tr, i) {
-    const name = rows[i] && rows[i][nameColIndex];
-    if (!name) return;
-    const rank = parseRank(rows[i][0]);
-    if (rank === null) return;
-    const entry = prev[name];
-    if (!entry || typeof entry !== 'object') {
-      toSave[name] = { ref: rank, last: rank };
-      return;
-    }
-    if (entry.last !== rank) {
-      toSave[name] = { ref: entry.last, last: rank };
-    } else {
-      toSave[name] = { ref: entry.ref, last: rank };
-    }
-    const diff = toSave[name].ref - rank;
-    if (diff === 0) return;
-    const span = document.createElement('span');
-    span.className = diff > 0 ? 'move-up' : 'move-down';
-    span.title = (diff > 0 ? 'Up ' : 'Down ') + Math.abs(diff) + ' place' + (Math.abs(diff) > 1 ? 's' : '');
-    span.textContent = diff > 0 ? ' ▲' : ' ▼';
-    const firstTd = tr.querySelector('td');
-    if (firstTd) firstTd.appendChild(span);
+// Mini inline SVG sparkline — rank over time (lower rank = better = higher in chart)
+function renderSparkline(history, currentRank) {
+  const ranks = [...(history || []).map(h => h.rank), currentRank].filter(r => r != null);
+  if (ranks.length < 2) return '';
+  const hi = Math.max(...ranks), lo = Math.min(...ranks), range = hi - lo || 1;
+  const W = 64, H = 20, P = 3;
+  const pts = ranks.map((r, i) => {
+    const x = (P + (i / (ranks.length - 1)) * (W - 2 * P)).toFixed(1);
+    const y = (P + ((r - lo) / range) * (H - 2 * P)).toFixed(1); // lower rank = lower y (better)
+    return `${x},${y}`;
   });
-  localStorage.setItem(storageKey, JSON.stringify(toSave));
+  const first = ranks[0], last = ranks[ranks.length - 1];
+  const color = last < first ? '#22c55e' : last > first ? '#ef4444' : '#94a3b8';
+  const [lx, ly] = pts[pts.length - 1].split(',');
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="sparkline-svg" aria-hidden="true">` +
+    `<polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.75"/>` +
+    `<circle cx="${lx}" cy="${ly}" r="2" fill="${color}"/>` +
+    `</svg>`;
 }
 
-loadTSV(updateUrl, 'lastUpdatedTable').catch(() => {});
+function moveBadge(delta) {
+  if (!delta) return '—';
+  const abs = Math.abs(delta);
+  return delta > 0
+    ? `<span class="move-up" title="Up ${abs} since start of day">▲${abs}</span>`
+    : `<span class="move-down" title="Down ${abs} since start of day">▼${abs}</span>`;
+}
 
-let teamHeaders = [], teamRows = [];
-loadTSV(leaderboardUrl, 'ourLeaderboard', ['earnings'], 2).then(data => {
-  teamHeaders = data.headers;
-  teamRows = data.rows;
-  applyMovementIndicators('ourLeaderboard', teamRows, 1, 'ourLB_pos3');
+// ── Render pool leaderboard ───────────────────────────────────────────────────
 
-  const teamSelect = document.getElementById('teamSelect');
+function renderPoolTable(entries) {
+  const table = document.getElementById('ourLeaderboard');
+  table.innerHTML = '';
+
+  const thead = document.createElement('thead');
+  thead.innerHTML = '<tr><th>Pos</th><th>Team</th><th>Trend</th><th>Day</th><th>Total</th></tr>';
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  (entries || []).forEach(entry => {
+    const tr = document.createElement('tr');
+    tr.dataset.teamName = entry.name;
+    const peakStar = (entry.peakRank === 1 && entry.rank !== 1)
+      ? `<span class="peak-badge" title="Led the pool at some point today">★</span>` : '';
+    tr.innerHTML =
+      `<td>${esc(String(entry.rank))}</td>` +
+      `<td>${esc(entry.name)}${peakStar}</td>` +
+      `<td class="spark-cell">${renderSparkline(entry.history, entry.rank)}</td>` +
+      `<td class="today-cell">${moveBadge(entry.dailyMove)}</td>` +
+      `<td class="money-cell">${formatMoney(entry.totalEarnings)}</td>`;
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+}
+
+// ── Render Masters leaderboard ────────────────────────────────────────────────
+
+function renderMastersTable(players) {
+  const table = document.getElementById('mastersLeaderboard');
+  table.innerHTML = '';
+
+  const thead = document.createElement('thead');
+  thead.innerHTML = '<tr><th>Pos</th><th>Player</th><th>Score</th><th>Thru</th><th>Today</th><th>Est. Earnings</th></tr>';
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  (players || []).forEach(p => {
+    const tr = document.createElement('tr');
+    if (p.status && p.status !== 'active') tr.classList.add('status-' + p.status);
+    tr.innerHTML =
+      `<td>${esc(String(p.position))}</td>` +
+      `<td>${esc(p.name)}</td>` +
+      `<td class="score-cell ${scoreClass(p.score)}">${esc(p.score)}</td>` +
+      `<td>${esc(p.thru)}</td>` +
+      `<td class="${scoreClass(p.today)}">${esc(p.today)}</td>` +
+      `<td class="money-cell">${formatMoney(p.earnings)}</td>`;
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+}
+
+// ── Team selector (Choices.js) ────────────────────────────────────────────────
+
+let allEntries = [];
+
+function buildSummaryTable(selectedNames) {
   const summaryDiv = document.getElementById('teamSummary');
-  const teamList = teamRows.map((r, i) => ({ name: r[1], index: i, data: r })).sort((a, b) => a.name.localeCompare(b.name));
+  if (!selectedNames.length || !allEntries.length) { summaryDiv.style.display = 'none'; return; }
 
-  teamList.forEach(team => {
+  const selected = allEntries.filter(e => selectedNames.includes(e.name));
+  const table = document.createElement('table');
+  const thead = document.createElement('thead');
+  thead.innerHTML = '<tr><th>Pos</th><th>Team</th><th>Trend</th><th>Day</th><th>Total</th></tr>';
+  table.appendChild(thead);
+  const tbody = document.createElement('tbody');
+  selected.forEach(entry => {
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      `<td>${esc(String(entry.rank))}</td>` +
+      `<td>${esc(entry.name)}</td>` +
+      `<td class="spark-cell">${renderSparkline(entry.history, entry.rank)}</td>` +
+      `<td class="today-cell">${moveBadge(entry.dailyMove)}</td>` +
+      `<td class="money-cell">${formatMoney(entry.totalEarnings)}</td>`;
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  summaryDiv.innerHTML = '';
+  summaryDiv.appendChild(table);
+  summaryDiv.style.display = 'block';
+}
+
+function initTeamSelector(entries) {
+  allEntries = entries;
+  const teamSelect = document.getElementById('teamSelect');
+
+  [...entries].sort((a, b) => a.name.localeCompare(b.name)).forEach(entry => {
     const opt = document.createElement('option');
-    opt.value = team.name;
-    opt.textContent = team.name;
+    opt.value = entry.name;
+    opt.textContent = entry.name;
     teamSelect.appendChild(opt);
   });
 
   const choices = new Choices(teamSelect, {
-    removeItemButton: true,
-    searchPlaceholderValue: 'Search teams...',
-    allowHTML: false,
-    searchEnabled: true,
-    renderChoiceLimit: -1,
-    itemSelectText: '',
-    position: 'auto'
+    removeItemButton: true, searchPlaceholderValue: 'Search teams...',
+    allowHTML: false, searchEnabled: true, renderChoiceLimit: -1,
+    itemSelectText: '', position: 'auto'
   });
-
-  function updateSummary(names) {
-    if (!names.length) { summaryDiv.style.display = 'none'; return; }
-    const table = document.createElement('table');
-    const thead = document.createElement('thead');
-    const headerRow = document.createElement('tr');
-    teamHeaders.forEach(h => { const th = document.createElement('th'); th.textContent = h; headerRow.appendChild(th); });
-    thead.appendChild(headerRow);
-    table.appendChild(thead);
-    const tbody = document.createElement('tbody');
-    names.forEach(name => {
-      const match = teamRows.find(r => r[1] === name);
-      if (match) {
-        const tr = document.createElement('tr');
-        match.forEach((cell, i) => {
-          const td = document.createElement('td');
-          td.textContent = teamHeaders[i]?.toLowerCase().includes('earn') ? formatMoney(cell) : cell;
-          tr.appendChild(td);
-        });
-        tbody.appendChild(tr);
-      }
-    });
-    table.appendChild(tbody);
-    summaryDiv.innerHTML = '';
-    summaryDiv.appendChild(table);
-    summaryDiv.style.display = 'block';
-  }
 
   const savedNames = JSON.parse(localStorage.getItem('selectedTeamNames') || '[]');
   savedNames.forEach(name => choices.setChoiceByValue(name));
-  document.querySelectorAll("#ourLeaderboard tbody tr").forEach((r, i) => {
-    const teamName = teamRows[i][1];
-    if (savedNames.includes(teamName)) r.classList.add("highlight");
+  document.querySelectorAll('#ourLeaderboard tbody tr').forEach(tr => {
+    if (savedNames.includes(tr.dataset.teamName)) tr.classList.add('highlight');
   });
-  updateSummary(savedNames);
+  buildSummaryTable(savedNames);
 
-  teamSelect.addEventListener("change", function () {
+  teamSelect.addEventListener('change', function () {
     const selected = Array.from(this.selectedOptions).map(o => o.value);
     localStorage.setItem('selectedTeamNames', JSON.stringify(selected));
-    document.querySelectorAll("#ourLeaderboard tbody tr").forEach((r, i) => {
-      r.classList.toggle("highlight", selected.includes(teamRows[i][1]));
+    document.querySelectorAll('#ourLeaderboard tbody tr').forEach(tr => {
+      tr.classList.toggle('highlight', selected.includes(tr.dataset.teamName));
     });
-    updateSummary(selected);
+    buildSummaryTable(selected);
   });
-}).catch(() => {});
+}
 
-loadTSV(mastersUrl, 'mastersLeaderboard', ['estimated'], 5)
-  .then(data => applyMovementIndicators('mastersLeaderboard', data.rows, 1, 'mastersLB_pos3'))
-  .catch(() => {});
+// ── Main data load ────────────────────────────────────────────────────────────
+
+fetch('/api/leaderboard')
+  .then(r => r.json())
+  .then(data => {
+    if (data.status === 'no_tournament') {
+      ['ourLeaderboard','mastersLeaderboard'].forEach(id => {
+        const t = document.getElementById(id);
+        if (t) t.innerHTML = '<tbody><tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted)">Tournament not yet underway — check back in April!</td></tr></tbody>';
+      });
+      return;
+    }
+    if (data.lastUpdated) {
+      const bar = document.getElementById('lastUpdatedBar');
+      if (bar) bar.textContent = 'Updated ' + new Date(data.lastUpdated).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
+    }
+    renderPoolTable(data.poolLeaderboard);
+    renderMastersTable(data.mastersLeaderboard);
+    initTeamSelector(data.poolLeaderboard || []);
+  })
+  .catch(err => console.error('Leaderboard load failed:', err));
 </script>
 </body>
 </html>
