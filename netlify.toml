@@ -1,6 +1,7 @@
 [build]
   publish = "."
   functions = "netlify/functions"
+  edge_functions = "netlify/edge-functions"
 
 [[redirects]]
   from = "/api/intro"
@@ -15,6 +16,15 @@
 [[redirects]]
   from = "/api/leaderboard"
   to = "/.netlify/functions/leaderboard"
+  status = 200
+
+[[edge_functions]]
+  path = "/*"
+  function = "auth"
+
+[[redirects]]
+  from = "/api/auth-login"
+  to = "/.netlify/functions/auth-login"
   status = 200
 
 [functions."leaderboard-snapshot"]

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Masters Pool — Login</title>
+  <link rel="icon" type="image/png" href="masters_pool_logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f3efe4;
+      --surface: #fefcf8;
+      --border: #d8d2c4;
+      --green: #006747;
+      --gold: #c8952a;
+      --text: #1a1510;
+      --text-muted: #6b6255;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      animation: fadeIn 0.4s ease forwards;
+    }
+    @keyframes fadeIn { to { opacity: 1; } }
+
+    header {
+      background: var(--green);
+      background-image:
+        repeating-linear-gradient(45deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 8px),
+        radial-gradient(ellipse 70% 60% at 50% 0%, rgba(255,255,255,0.09) 0%, transparent 100%),
+        linear-gradient(to bottom, #006040 0%, #003d28 100%);
+      padding: 28px 20px 24px;
+      text-align: center;
+      border-bottom: 3px solid var(--gold);
+    }
+    .logo { height: 110px; }
+    .site-title {
+      font-family: 'Playfair Display', serif;
+      color: #fff;
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      margin-top: 10px;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.4);
+    }
+    .site-subtitle {
+      color: rgba(255,255,255,0.60);
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 20px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 40px 36px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+
+    .card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .card-sub {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+    }
+
+    label {
+      display: block;
+      text-align: left;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    input[type="password"] {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      background: var(--bg);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+      margin-bottom: 20px;
+      letter-spacing: 2px;
+    }
+    input[type="password"]:focus {
+      border-color: var(--green);
+    }
+
+    button {
+      width: 100%;
+      padding: 13px;
+      background: var(--green);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+    button:hover  { background: #005538; }
+    button:active { transform: scale(0.98); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .error {
+      display: none;
+      margin-top: 14px;
+      padding: 10px 14px;
+      background: rgba(180,40,40,0.08);
+      border: 1px solid rgba(180,40,40,0.2);
+      border-radius: 6px;
+      color: #8b1a1a;
+      font-size: 14px;
+    }
+    .error.visible { display: block; }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 12px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="masters_pool_logo.png" alt="Masters Pool" class="logo">
+    <div class="site-title">Masters Pool</div>
+    <div class="site-subtitle">Augusta National &bull; Invitational</div>
+  </header>
+
+  <main>
+    <div class="card">
+      <div class="card-title">Welcome Back</div>
+      <div class="card-sub">Enter the pool password to continue</div>
+
+      <form id="loginForm">
+        <label for="password">Password</label>
+        <input type="password" id="password" autocomplete="current-password" autofocus>
+        <button type="submit" id="submitBtn">Enter the Pool</button>
+        <div class="error" id="errorMsg">Incorrect password — try again.</div>
+      </form>
+    </div>
+  </main>
+
+  <footer>
+    &copy; <script>document.write(new Date().getFullYear())</script> Masters Pool
+  </footer>
+
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const password  = document.getElementById('password').value;
+      const btn       = document.getElementById('submitBtn');
+      const errorMsg  = document.getElementById('errorMsg');
+
+      if (!password) return;
+
+      btn.disabled = true;
+      btn.textContent = 'Checking…';
+      errorMsg.classList.remove('visible');
+
+      try {
+        const res = await fetch('/api/auth-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password }),
+        });
+
+        if (res.ok) {
+          // Redirect to home (or wherever they came from)
+          const dest = new URLSearchParams(location.search).get('next') || '/';
+          location.href = dest;
+        } else {
+          errorMsg.classList.add('visible');
+          document.getElementById('password').value = '';
+          document.getElementById('password').focus();
+          btn.disabled = false;
+          btn.textContent = 'Enter the Pool';
+        }
+      } catch {
+        errorMsg.textContent = 'Something went wrong — please try again.';
+        errorMsg.classList.add('visible');
+        btn.disabled = false;
+        btn.textContent = 'Enter the Pool';
+      }
+    });
+  </script>
+</body>
+</html>
