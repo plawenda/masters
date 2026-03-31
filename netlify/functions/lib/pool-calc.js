@@ -35,6 +35,31 @@ function normalizeName(name) {
     .trim();
 }
 
+// DataGolf returns names as "Last, First" — convert to "First Last" then normalize
+// Pool entries (from Tally) are already "First Last", so normalizeName() is correct for those
+function canonicalizeName(name) {
+  const s = name.trim();
+  if (s.includes(',')) {
+    const comma = s.indexOf(',');
+    const last  = s.slice(0, comma).trim();
+    const first = s.slice(comma + 1).trim();
+    return normalizeName(`${first} ${last}`);
+  }
+  return normalizeName(s);
+}
+
+// Return display name in "First Last" order regardless of source format
+function displayName(name) {
+  const s = name.trim();
+  if (s.includes(',')) {
+    const comma = s.indexOf(',');
+    const last  = s.slice(0, comma).trim();
+    const first = s.slice(comma + 1).trim();
+    return `${first} ${last}`;
+  }
+  return s;
+}
+
 function parsePosition(pos) {
   if (!pos) return null;
   const s = pos.toString().toUpperCase().trim();
@@ -175,7 +200,7 @@ function buildEarningsMap(players) {
     const each = Math.round(total / tied.length);
     for (const p of tied) {
       const name = playerName(p);
-      if (name) earningsMap[normalizeName(name)] = each;
+      if (name) earningsMap[canonicalizeName(name)] = each;
     }
   }
   return earningsMap;
@@ -187,7 +212,7 @@ function computeStandings(entries, players, earningsMap) {
   const playerMap = {};
   for (const p of players) {
     const name = playerName(p);
-    if (name) playerMap[normalizeName(name)] = p;
+    if (name) playerMap[canonicalizeName(name)] = p;
   }
 
   const teams = entries.map(entry => {
@@ -231,18 +256,18 @@ function computeStandings(entries, players, earningsMap) {
 // Build Masters leaderboard array from raw players
 function buildMastersLeaderboard(players, earningsMap) {
   return players.map(p => {
-    const name     = playerName(p);
+    const rawName  = playerName(p);
     const posRaw   = playerPosition(p);
     const posStr   = posRaw ? posRaw.toString().toUpperCase().trim() : '';
     const inactive = isInactive(posStr);
     return {
-      name,
+      name:     displayName(rawName),
       position: posRaw ?? '-',
       score:    fmtScore(playerTotal(p)),
       today:    fmtScore(playerToday(p)),
       thru:     inactive ? posStr : fmtThru(playerThru(p)),
       status:   inactive ? posStr.toLowerCase() : 'active',
-      earnings: name ? (earningsMap[normalizeName(name)] ?? 0) : 0,
+      earnings: rawName ? (earningsMap[canonicalizeName(rawName)] ?? 0) : 0,
     };
   });
 }
@@ -253,6 +278,8 @@ module.exports = {
   TEAMS_TSV_URL,
   PURSE,
   normalizeName,
+  canonicalizeName,
+  displayName,
   parsePosition,
   fmtScore,
   fmtThru,
