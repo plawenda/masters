@@ -272,6 +272,37 @@ function buildMastersLeaderboard(players, earningsMap) {
   });
 }
 
+// ---------- Strokes Gained ----------
+
+async function fetchSGStats() {
+  const key = process.env.DATAGOLF_API_KEY;
+  if (!key) return {};
+
+  const url = 'https://feeds.datagolf.com/preds/live-tournament-stats' +
+    '?stats=sg_putt,sg_arg,sg_app,sg_ott,sg_t2g,sg_total' +
+    '&round=event_cumulative&display=value&file_format=json&key=' + key;
+
+  const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+  if (!r.ok) throw new Error(`SG stats ${r.status}`);
+  const json = await r.json();
+
+  // Build canonicalized name → SG object map
+  const map = {};
+  for (const p of (json.players || json.live_stats || [])) {
+    const rawName = p.player_name || p.name || '';
+    if (!rawName) continue;
+    map[canonicalizeName(rawName)] = {
+      sg_putt:  p.sg_putt  ?? null,
+      sg_arg:   p.sg_arg   ?? null,
+      sg_app:   p.sg_app   ?? null,
+      sg_ott:   p.sg_ott   ?? null,
+      sg_t2g:   p.sg_t2g   ?? null,
+      sg_total: p.sg_total ?? null,
+    };
+  }
+  return map;
+}
+
 module.exports = {
   WORKER_URL,
   WORKER_BACKUP_URL,
@@ -285,6 +316,7 @@ module.exports = {
   fmtThru,
   fetchLiveScores,
   fetchPoolEntries,
+  fetchSGStats,
   buildEarningsMap,
   computeStandings,
   buildMastersLeaderboard,

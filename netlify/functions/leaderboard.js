@@ -1,8 +1,8 @@
 'use strict';
 
 const { getStore }           = require('@netlify/blobs');
-const { fetchLiveScores, fetchPoolEntries, buildEarningsMap,
-        computeStandings, buildMastersLeaderboard } = require('./lib/pool-calc');
+const { fetchLiveScores, fetchPoolEntries, fetchSGStats, buildEarningsMap,
+        computeStandings, buildMastersLeaderboard, normalizeName } = require('./lib/pool-calc');
 
 const ALLOWED_ORIGIN = process.env.URL || 'https://masters-pool.org';
 const CORS_HEADERS = {
@@ -57,10 +57,11 @@ function computeMovement(entryName, currentRank, snapshots) {
 
 exports.handler = async () => {
   try {
-    const [scoreData, entries, snapshots] = await Promise.all([
+    const [scoreData, entries, snapshots, sgMap] = await Promise.all([
       fetchLiveScores(),
       fetchPoolEntries(),
       getTodaySnapshots(),
+      fetchSGStats().catch(e => { console.warn('SG fetch failed:', e.message); return {}; }),
     ]);
 
     if (!scoreData.players.length) {
@@ -71,9 +72,12 @@ exports.handler = async () => {
       };
     }
 
-    const earningsMap       = buildEarningsMap(scoreData.players);
-    const standings         = computeStandings(entries, scoreData.players, earningsMap);
-    const mastersLeaderboard = buildMastersLeaderboard(scoreData.players, earningsMap);
+    const earningsMap        = buildEarningsMap(scoreData.players);
+    const standings          = computeStandings(entries, scoreData.players, earningsMap);
+    const mastersLeaderboard = buildMastersLeaderboard(scoreData.players, earningsMap).map(p => ({
+      ...p,
+      sg: sgMap[normalizeName(p.name)] ?? null,
+    }));
 
     // Attach movement stats to each team
     const poolLeaderboard = standings.map(entry => ({

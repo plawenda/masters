@@ -344,6 +344,15 @@
     .score-pos { color: #dc2626; }
     .status-cut td, .status-wd, .status-dq { opacity: 0.5; }
     .update-time { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text-muted); letter-spacing: 0.5px; }
+    .expand-btn { background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 10px; padding: 0 5px 0 0; line-height: 1; transition: transform 0.2s; vertical-align: middle; }
+    .expand-btn.open { transform: rotate(90deg); display: inline-block; }
+    .sg-row { display: none; background: var(--surface2); }
+    .sg-row.visible { display: table-row; }
+    .sg-row td { padding: 0; border-top: none; }
+    .sg-grid { display: flex; gap: 6px; flex-wrap: wrap; padding: 10px 14px 12px; }
+    .sg-cell { flex: 1; min-width: 76px; padding: 7px 8px; border-radius: 6px; text-align: center; }
+    .sg-cell-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); margin-bottom: 3px; }
+    .sg-cell-val { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; color: var(--text); }
   </style>
 </head>
 <body>
@@ -498,6 +507,22 @@ function renderPoolTable(entries) {
   table.appendChild(tbody);
 }
 
+// ── SG helpers ────────────────────────────────────────────────────────────────
+
+function sgBg(val) {
+  if (val == null) return 'transparent';
+  const clamped = Math.max(-3, Math.min(3, val));
+  const intensity = (Math.abs(clamped) / 3 * 0.6).toFixed(2);
+  return clamped >= 0
+    ? `rgba(0,103,71,${intensity})`
+    : `rgba(180,40,40,${intensity})`;
+}
+
+function fmtSG(val) {
+  if (val == null) return '—';
+  return (val >= 0 ? '+' : '') + Number(val).toFixed(2);
+}
+
 // ── Render Masters leaderboard ────────────────────────────────────────────────
 
 function renderMastersTable(players) {
@@ -509,19 +534,52 @@ function renderMastersTable(players) {
   table.appendChild(thead);
 
   const tbody = document.createElement('tbody');
-  (players || []).forEach(p => {
+  const sgLabels = ['SG Putt','SG ARG','SG APP','SG OTT','SG T2G','SG Total'];
+  const sgKeys   = ['sg_putt','sg_arg','sg_app','sg_ott','sg_t2g','sg_total'];
+
+  (players || []).forEach((p, i) => {
+    const hasSG = p.sg && sgKeys.some(k => p.sg[k] != null);
+    const rowId = `sg-${i}`;
+
     const tr = document.createElement('tr');
     if (p.status && p.status !== 'active') tr.classList.add('status-' + p.status);
+    const expandBtn = hasSG ? `<button class="expand-btn" data-target="${rowId}" aria-label="Show SG stats">&#9658;</button>` : '';
     tr.innerHTML =
       `<td>${esc(String(p.position))}</td>` +
-      `<td>${esc(p.name)}</td>` +
+      `<td>${expandBtn}${esc(p.name)}</td>` +
       `<td class="score-cell ${scoreClass(p.score)}">${esc(p.score)}</td>` +
       `<td>${esc(p.thru)}</td>` +
       `<td class="${scoreClass(p.today)}">${esc(p.today)}</td>` +
       `<td class="money-cell">${formatMoney(p.earnings)}</td>`;
     tbody.appendChild(tr);
+
+    if (hasSG) {
+      const sgRow = document.createElement('tr');
+      sgRow.className = 'sg-row';
+      sgRow.id = rowId;
+      sgRow.innerHTML = `<td colspan="6"><div class="sg-grid">${
+        sgKeys.map((k, j) =>
+          `<div class="sg-cell" style="background:${sgBg(p.sg[k])}">` +
+          `<div class="sg-cell-label">${sgLabels[j]}</div>` +
+          `<div class="sg-cell-val">${fmtSG(p.sg[k])}</div>` +
+          `</div>`
+        ).join('')
+      }</div></td>`;
+      tbody.appendChild(sgRow);
+    }
   });
+
   table.appendChild(tbody);
+
+  // Expand toggle (delegated)
+  table.addEventListener('click', function handler(e) {
+    const btn = e.target.closest('.expand-btn');
+    if (!btn) return;
+    const sgRow = document.getElementById(btn.dataset.target);
+    if (!sgRow) return;
+    sgRow.classList.toggle('visible');
+    btn.classList.toggle('open');
+  }, { once: false });
 }
 
 // ── Team selector (Choices.js) ────────────────────────────────────────────────
