@@ -328,9 +328,11 @@
     .score-neg { color: #15803d; font-weight: 600; }
     .score-pos { color: #dc2626; }
     .status-cut td, .status-wd td, .status-dq td { opacity: 0.5; }
-    .golfer-detail-row td { background: var(--green-dim); font-size: 13px; padding: 6px 10px 6px 28px; }
-    .golfer-detail-row .g-name { font-weight: 500; }
+    .golfer-detail-row td { background: rgba(0,103,71,0.04); font-size: 12px; padding: 5px 10px; color: var(--text-muted); border-bottom: 1px solid rgba(0,103,71,0.07); }
+    .golfer-detail-row td:first-child { border-left: 2px solid var(--green); padding-left: 6px; }
+    .golfer-detail-row .g-name { font-weight: 500; color: var(--text); padding-left: 16px; }
     .golfer-detail-row .g-earnings { font-variant-numeric: tabular-nums; text-align: right; }
+    .golfer-detail-row.group-end td { border-bottom: 2px solid var(--border); }
     .expand-btn { background: none; border: none; cursor: pointer; font-size: 11px; color: var(--text-muted); padding: 0 4px; vertical-align: middle; }
     .expand-btn:hover { color: var(--green); }
   </style>
@@ -470,6 +472,7 @@ function renderDetailedTable(entries) {
       tbody.appendChild(dtr);
       return dtr;
     });
+    if (detailRows.length > 0) detailRows[detailRows.length - 1].classList.add('group-end');
     tr.querySelector('.expand-btn').addEventListener('click', function () {
       const expanded = this.dataset.expanded === 'true';
       this.dataset.expanded = String(!expanded);
