@@ -24,6 +24,32 @@ async function getTodaySnapshots() {
   }
 }
 
+// Write a snapshot on this request if the last stored one is >15 min old.
+// This ensures history builds even if the scheduled cron is unreliable.
+async function maybeWriteSnapshot(standings, existingSnapshots) {
+  try {
+    const fifteenMinAgo = Date.now() - 15 * 60 * 1000;
+    const lastTime = existingSnapshots.length
+      ? new Date(existingSnapshots[existingSnapshots.length - 1].time).getTime()
+      : 0;
+    if (lastTime > fifteenMinAgo) return; // recent snapshot exists, skip
+
+    const store = getStore('leaderboard-history');
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+    const key   = `snapshots_${today}`;
+
+    const snapshot = {
+      time: new Date().toISOString(),
+      standings: standings.map(e => ({ name: e.name, rank: e.rank, totalEarnings: e.totalEarnings })),
+    };
+    const updated = [...existingSnapshots, snapshot].slice(-200);
+    await store.set(key, JSON.stringify(updated));
+    console.log(`[leaderboard] On-demand snapshot saved: ${snapshot.time}, ${standings.length} teams`);
+  } catch (e) {
+    console.warn('[leaderboard] Snapshot write skipped:', e.message);
+  }
+}
+
 // ---------- Movement stats ----------
 
 function computeMovement(entryName, currentRank, snapshots) {
@@ -79,6 +105,9 @@ exports.handler = async () => {
       ...p,
       sg: sgMap[normalizeName(p.name)] ?? null,
     }));
+
+    // Write a snapshot if none exists recently (fallback for unreliable cron)
+    maybeWriteSnapshot(standings, snapshots);
 
     // Attach movement stats to each team
     const poolLeaderboard = standings.map(entry => ({
