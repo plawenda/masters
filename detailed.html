@@ -328,11 +328,14 @@
     .score-neg { color: #15803d; font-weight: 600; }
     .score-pos { color: #dc2626; }
     .status-cut td, .status-wd td, .status-dq td { opacity: 0.5; }
-    .golfer-detail-row td { background: rgba(0,103,71,0.04); font-size: 12px; padding: 5px 10px; color: var(--text-muted); border-bottom: 1px solid rgba(0,103,71,0.07); }
-    .golfer-detail-row td:first-child { border-left: 2px solid var(--green); padding-left: 6px; }
-    .golfer-detail-row .g-name { font-weight: 500; color: var(--text); padding-left: 16px; }
-    .golfer-detail-row .g-earnings { font-variant-numeric: tabular-nums; text-align: right; }
+    .golfer-detail-row td { background: rgba(0,103,71,0.04); border-bottom: 1px solid rgba(0,103,71,0.07); border-left: 2px solid var(--green); padding: 0; }
     .golfer-detail-row.group-end td { border-bottom: 2px solid var(--border); }
+    .golfer-inner { display: flex; align-items: center; gap: 8px; padding: 5px 16px; font-size: 12px; color: var(--text-muted); max-width: 520px; }
+    .golfer-inner .g-pos { width: 28px; text-align: right; flex-shrink: 0; }
+    .golfer-inner .g-name { font-weight: 500; color: var(--text); flex: 1 1 auto; min-width: 0; }
+    .golfer-inner .g-score { width: 36px; text-align: center; flex-shrink: 0; }
+    .golfer-inner .g-thru { width: 24px; text-align: center; flex-shrink: 0; font-size: 11px; }
+    .golfer-inner .g-earnings { width: 88px; text-align: right; flex-shrink: 0; font-variant-numeric: tabular-nums; }
     .expand-btn { background: none; border: none; cursor: pointer; font-size: 11px; color: var(--text-muted); padding: 0 4px; vertical-align: middle; }
     .expand-btn:hover { color: var(--green); }
   </style>
@@ -463,12 +466,13 @@ function renderDetailedTable(entries) {
       dtr.style.display = 'none';
       if (g.status && g.status !== 'active') dtr.classList.add('status-' + g.status);
       dtr.innerHTML =
-        '<td></td>' +
-        '<td>' + esc(String(g.position)) + '</td>' +
-        '<td class="g-name">' + esc(g.name) + '</td>' +
-        '<td class="' + scoreClass(g.score) + '">' + esc(g.score) + '</td>' +
-        '<td>' + esc(g.thru) + '</td>' +
-        '<td class="g-earnings money-cell">' + formatMoney(g.earnings) + '</td>';
+        '<td colspan="6"><div class="golfer-inner">' +
+        '<span class="g-pos">' + esc(String(g.position)) + '</span>' +
+        '<span class="g-name">' + esc(g.name) + '</span>' +
+        '<span class="g-score ' + scoreClass(g.score) + '">' + esc(g.score) + '</span>' +
+        '<span class="g-thru">' + esc(g.thru) + '</span>' +
+        '<span class="g-earnings">' + formatMoney(g.earnings) + '</span>' +
+        '</div></td>';
       tbody.appendChild(dtr);
       return dtr;
     });
