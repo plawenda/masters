@@ -35,17 +35,7 @@
     }
     .card-header { border-bottom: 2px solid rgba(200,149,42,0.5); }
 
-    #teamSummary {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-left: 3px solid var(--gold);
-      border-radius: 4px;
-      margin: 0 0 20px;
-      overflow-x: auto;
-      display: none;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-    #teamSummary table { margin: 0; }
+    #teamSummary .card { overflow-x: auto; }
 
     .leaderboard-section { display: flex; flex-wrap: wrap; gap: 20px; }
     .leaderboard-box { flex: 1 1 48%; min-width: 300px; }
@@ -226,10 +216,9 @@
     <select id="teamSelect" multiple></select>
   </div>
 
-  <div id="teamSummary"></div>
-
   <div class="leaderboard-section">
     <div class="leaderboard-box">
+      <div id="teamSummary" style="display:none; margin-bottom: 16px;"></div>
       <div class="card">
         <div class="card-header">
           <span class="card-title">Our Leaderboard</span>
@@ -563,8 +552,17 @@ function buildSummaryTable(selectedNames) {
     });
   });
   table.appendChild(tbody);
+  const card = document.createElement('div');
+  card.className = 'card';
+  const cardHeader = document.createElement('div');
+  cardHeader.className = 'card-header';
+  cardHeader.innerHTML =
+    '<span class="card-title">Mini Leaderboard</span>' +
+    '<span class="live-badge">Live</span>';
+  card.appendChild(cardHeader);
+  card.appendChild(table);
   summaryDiv.innerHTML = '';
-  summaryDiv.appendChild(table);
+  summaryDiv.appendChild(card);
   summaryDiv.style.display = 'block';
 }
 
