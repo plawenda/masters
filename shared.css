@@ -87,45 +87,7 @@ nav a {
 nav a:hover { color: var(--green); }
 nav a.active { color: var(--green); border-bottom-color: var(--green); }
 
-/* ── Dispatch strip ────────────────────────────────────────────────────────── */
-.dispatch-strip {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  border-top: 3px solid var(--gold);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 12px 24px;
-}
-.dispatch-label-inline {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--gold);
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-.dispatch-text {
-  font-family: 'Playfair Display', serif;
-  font-style: italic;
-  font-size: 15px;
-  color: var(--text);
-  line-height: 1.5;
-  max-width: 800px;
-}
-.intro-shimmer {
-  display: inline-block;
-  width: min(480px, 70vw);
-  height: 14px;
-  background: linear-gradient(90deg, var(--border) 25%, var(--surface2) 50%, var(--border) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.4s infinite;
-  border-radius: 4px;
-  vertical-align: middle;
-}
+/* Shimmer keyframe — used by .skel skeleton loader */
 @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
 /* ── Hamburger / mobile nav ────────────────────────────────────────────────── */
@@ -152,9 +114,7 @@ nav a.active { color: var(--green); border-bottom-color: var(--green); }
   header { padding: 16px 20px 14px; }
   .site-title { font-size: 26px; }
   .site-subtitle { font-size: 13px; letter-spacing: 2px; }
-  .dispatch-strip { padding: 8px 16px; gap: 6px; }
-  .dispatch-label-inline { display: none; }
-  .dispatch-text { font-size: 14px; }
+  tbody td { padding: 8px 10px; }
   nav { flex-direction: column; align-items: stretch; }
   .hamburger { display: flex; }
   nav a { display: none; }
@@ -244,7 +204,7 @@ tbody tr.highlight td:first-child { border-left: 3px solid var(--green); padding
 /* ── Utility ─────────────────────────────────────────────────────────────────── */
 .score-neg { color: #15803d; font-weight: 600; }
 .score-pos { color: #dc2626; }
-.status-cut td, .status-wd, .status-dq { opacity: 0.5; }
+.status-cut td, .status-wd td, .status-dq td { opacity: 0.5; }
 .update-time { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text-muted); letter-spacing: 0.5px; }
 .move-up   { color: #15803d; font-size: 11px; margin-left: 4px; vertical-align: middle; font-weight: 700; letter-spacing: 0; }
 .move-down { color: #dc2626; font-size: 11px; margin-left: 4px; vertical-align: middle; font-weight: 700; letter-spacing: 0; }
@@ -274,6 +234,49 @@ tbody tr.highlight td:first-child { border-left: 3px solid var(--green); padding
 /* ── Pool leader row highlight ───────────────────────────────────────────────── */
 tbody tr.is-leader { background: var(--gold-dim) !important; }
 tbody tr.is-leader:hover { background: rgba(184,151,46,0.2) !important; }
+
+/* ── Expand buttons ──────────────────────────────────────────────────────────── */
+.expand-btn, .team-expand-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 11px;
+  padding: 0 4px;
+  vertical-align: middle;
+  transition: color 0.15s;
+}
+.expand-btn:hover, .team-expand-btn:hover { color: var(--green); }
+
+/* ── Golfer sub-rows (expanded team detail) ──────────────────────────────────── */
+.golfer-detail-row td {
+  background: rgba(0,103,71,0.04);
+  font-size: 12px;
+  padding: 5px 10px;
+  color: var(--text-muted);
+  border-bottom: 1px solid rgba(0,103,71,0.07);
+}
+.golfer-detail-row td:first-child { border-left: 2px solid var(--green); padding-left: 6px; }
+.golfer-detail-row .g-name { font-weight: 500; color: var(--text); padding-left: 16px; }
+.golfer-detail-row .g-earnings { font-variant-numeric: tabular-nums; text-align: right; }
+.golfer-detail-row.group-end td { border-bottom: 2px solid var(--border); }
+
+/* ── Show more button ────────────────────────────────────────────────────────── */
+.show-more-btn {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.show-more-btn:hover { background: var(--green-dim); color: var(--green); border-color: var(--green); }
 
 /* ── Team selector ───────────────────────────────────────────────────────────── */
 .selector-card {

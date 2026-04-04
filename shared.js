@@ -6,18 +6,6 @@
   const yearEl = document.getElementById('year');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-  // AI dispatch
-  fetch('/api/intro')
-    .then(r => r.json())
-    .then(d => {
-      if (d.intro) document.getElementById('introUpdate').textContent = d.intro;
-      else document.getElementById('dispatch').style.display = 'none';
-    })
-    .catch(() => {
-      const el = document.getElementById('dispatch');
-      if (el) el.style.display = 'none';
-    });
-
   // Hamburger menu
   const menuBtn = document.getElementById('menuBtn');
   const navEl = document.querySelector('nav');

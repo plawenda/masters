@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Masters Pool — Live Leaderboard</title>
   <link rel="icon" type="image/png" href="masters_pool_logo.png">
@@ -14,16 +13,26 @@
   <style>
     .container { max-width: 1300px; margin: auto; padding: 24px 20px; }
 
+    /* ── Welcome banner ── */
+    .welcome-strip {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      border-top: 3px solid var(--gold);
+      text-align: center;
+      padding: 12px 24px;
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 15px;
+      color: var(--text-muted);
+    }
+    .welcome-strip strong { color: var(--green); font-style: normal; font-weight: 600; }
+
     .info-bar {
       font-size: 14px;
       color: var(--text-muted);
       margin-bottom: 18px;
       letter-spacing: 0.3px;
     }
-    .info-bar table { width: auto; }
-    .info-bar td { padding: 2px 8px 2px 0; border: none; color: var(--text-muted); font-size: 14px; background: transparent; }
-    .info-bar table thead th { background: transparent; color: var(--text-muted); padding: 0; font-size: 14px; letter-spacing: 0; text-transform: none; position: static; border: none; }
-
     .card-header { border-bottom: 2px solid rgba(200,149,42,0.5); }
 
     #teamSummary {
@@ -41,7 +50,16 @@
     .leaderboard-section { display: flex; flex-wrap: wrap; gap: 20px; }
     .leaderboard-box { flex: 1 1 48%; min-width: 300px; }
 
-    /* Choices.js overrides */
+    /* ── Masters collapsible on mobile ── */
+    .masters-toggle { display: none; font-size: 11px; margin-left: auto; color: rgba(255,255,255,0.6); }
+    @media (max-width: 600px) {
+      .masters-toggle { display: inline-block; }
+      #mastersCardHeader { cursor: pointer; user-select: none; }
+      #mastersCardBody { display: none; }
+      #mastersCardBody.expanded { display: block; }
+    }
+
+    /* ── Choices.js overrides ── */
     .choices { margin: 0; }
     .choices__inner {
       background: var(--bg) !important;
@@ -79,9 +97,14 @@
     .choices__placeholder { color: var(--text-muted) !important; }
     .choices__list[aria-expanded] { z-index: 100 !important; }
 
-    /* SG stats expand */
-    .expand-btn { background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 10px; padding: 0 5px 0 0; line-height: 1; transition: transform 0.2s; vertical-align: middle; }
-    .expand-btn.open { transform: rotate(90deg); display: inline-block; }
+    /* ── Masters table: SG expand (rotation style, scoped to avoid pool expand conflict) ── */
+    #mastersLeaderboard .expand-btn {
+      font-size: 10px;
+      padding: 0 5px 0 0;
+      line-height: 1;
+      transition: color 0.15s, transform 0.2s;
+    }
+    #mastersLeaderboard .expand-btn.open { transform: rotate(90deg); display: inline-block; }
     .sg-row { display: none; background: var(--surface2); }
     .sg-row.visible { display: table-row; }
     .sg-row td { padding: 0; border-top: none; }
@@ -89,6 +112,24 @@
     .sg-cell { flex: 1; min-width: 76px; padding: 7px 8px; border-radius: 6px; text-align: center; }
     .sg-cell-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); margin-bottom: 3px; }
     .sg-cell-val { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; color: var(--text); }
+
+    /* ── Masters table: new columns ── */
+    .win-pct-cell { text-align: center; font-family: 'DM Mono', monospace; font-size: 13px; white-space: nowrap; }
+    .ownership-cell { text-align: center; font-size: 13px; color: var(--text-muted); white-space: nowrap; }
+    .cut-separator td { padding: 0; }
+    .cut-separator-cell {
+      text-align: center;
+      padding: 5px 12px !important;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      background: var(--surface2);
+      border-top: 1px dashed var(--border) !important;
+      border-bottom: 1px dashed var(--border) !important;
+    }
+    .hot-round { font-weight: 700; }
+    #mastersCardBody { overflow-x: auto; }
   </style>
 </head>
 <body>
@@ -96,14 +137,12 @@
 <header>
   <img class="logo" src="masters_pool_logo.png" alt="Masters Pool Logo" />
   <div class="site-title">Masters Pool</div>
-  
   <div class="site-subtitle">Augusta National · <span id="year"></span></div>
 </header>
 
 <nav>
   <button class="hamburger" id="menuBtn" aria-label="Toggle menu">&#9776; Menu</button>
-  <a href="index.html" class="active">Live Leaderboard</a>
-  <a href="detailed.html">Detailed Leaderboard</a>
+  <a href="index.html" class="active">Leaderboard</a>
   <a href="costs.html">Golfer Costs</a>
   <a href="prizes.html">Prize Money</a>
   <a href="payouts.html">Pool Payouts</a>
@@ -111,9 +150,9 @@
   <a href="rules.html">Rules</a>
 </nav>
 
-<div class="dispatch-strip" id="dispatch">
-  <span class="dispatch-label-inline">Dispatch</span>
-  <span class="dispatch-text" id="introUpdate"><span class="intro-shimmer"></span></span>
+<div class="welcome-strip">
+  Welcome to the <strong id="welcomeYear"></strong> Masters Pool —
+  may your picks play Augusta better than you could.
 </div>
 
 <div class="container">
@@ -140,11 +179,14 @@
     </div>
     <div class="leaderboard-box">
       <div class="card">
-        <div class="card-header">
+        <div class="card-header" id="mastersCardHeader">
           <span class="card-title">Masters Leaderboard</span>
           <span class="live-badge">Live</span>
+          <span class="masters-toggle">▶</span>
         </div>
-        <table id="mastersLeaderboard"></table>
+        <div id="mastersCardBody">
+          <table id="mastersLeaderboard"></table>
+        </div>
       </div>
     </div>
   </div>
@@ -165,29 +207,104 @@ function renderSkeleton(tableId, cols) {
   t.innerHTML = html;
 }
 
-// ── Render pool leaderboard ───────────────────────────────────────────────────
+// ── Win % color helper ────────────────────────────────────────────────────────
+function winPctStyle(pct) {
+  if (pct == null) return '';
+  if (pct >= 25) return 'color:var(--green);font-weight:700';
+  if (pct >= 15) return 'color:#15803d;font-weight:600';
+  if (pct >= 7)  return 'color:#166534';
+  return 'color:var(--text-muted)';
+}
+
+// ── Render pool leaderboard (with expandable golfer sub-rows) ─────────────────
+const expandedTeams = new Set();
+let visibleCount = 50;
+
 function renderPoolTable(entries) {
   const table = document.getElementById('ourLeaderboard');
   table.innerHTML = '';
   const thead = document.createElement('thead');
-  thead.innerHTML = '<tr><th>Pos</th><th>Team</th><th>Trend</th><th>Day</th><th>Total</th></tr>';
+  thead.innerHTML = '<tr><th></th><th>Pos</th><th>Team</th><th>Trend</th><th>Day</th><th>Total</th></tr>';
   table.appendChild(thead);
   const tbody = document.createElement('tbody');
-  (entries || []).forEach(entry => {
+  const visible = entries.slice(0, visibleCount);
+
+  visible.forEach(entry => {
     const tr = document.createElement('tr');
     tr.dataset.teamName = entry.name;
     if (entry.rank === 1) tr.classList.add('is-leader');
     const peakStar = (entry.peakRank === 1 && entry.rank !== 1)
       ? `<span class="peak-badge" title="Led the pool at some point today">★</span>` : '';
     tr.innerHTML =
+      `<td><button class="team-expand-btn" aria-label="Toggle golfers" data-expanded="false">▶</button></td>` +
       `<td>${esc(String(entry.rank))}</td>` +
       `<td>${esc(entry.name)}${peakStar}</td>` +
       `<td class="spark-cell">${renderSparkline(entry.history, entry.rank)}</td>` +
       `<td class="today-cell">${moveBadge(entry.dailyMove)}</td>` +
       `<td class="money-cell">${formatMoney(entry.totalEarnings)}</td>`;
     tbody.appendChild(tr);
+
+    const detailRows = (entry.golfers || []).map(g => {
+      const dtr = document.createElement('tr');
+      dtr.classList.add('golfer-detail-row');
+      dtr.style.display = 'none';
+      if (g.status && g.status !== 'active') dtr.classList.add('status-' + g.status);
+      dtr.innerHTML =
+        `<td></td>` +
+        `<td>${esc(String(g.position))}</td>` +
+        `<td class="g-name">${esc(g.name)}</td>` +
+        `<td class="${scoreClass(g.score)}">${esc(g.score)}</td>` +
+        `<td>${esc(g.thru)}</td>` +
+        `<td class="g-earnings money-cell">${formatMoney(g.earnings)}</td>`;
+      tbody.appendChild(dtr);
+      return dtr;
+    });
+    if (detailRows.length > 0) detailRows[detailRows.length - 1].classList.add('group-end');
+
+    tr.querySelector('.team-expand-btn').addEventListener('click', function () {
+      const expanded = this.dataset.expanded === 'true';
+      this.dataset.expanded = String(!expanded);
+      this.textContent = expanded ? '▶' : '▼';
+      detailRows.forEach(dtr => { dtr.style.display = expanded ? 'none' : ''; });
+      if (!expanded) expandedTeams.add(entry.name);
+      else expandedTeams.delete(entry.name);
+    });
   });
+
   table.appendChild(tbody);
+  renderShowMore(entries);
+}
+
+function renderShowMore(entries) {
+  const existing = document.getElementById('showMoreBtn');
+  if (existing) existing.remove();
+  const remaining = entries.length - visibleCount;
+  if (remaining <= 0) return;
+  const btn = document.createElement('button');
+  btn.id = 'showMoreBtn';
+  btn.className = 'show-more-btn';
+  const next = Math.min(50, remaining);
+  btn.textContent = `Show ${next} more — ${remaining} remaining`;
+  btn.addEventListener('click', () => {
+    visibleCount += 50;
+    renderPoolTable(allEntries);
+    reApplyExpanded();
+    const savedNames = JSON.parse(localStorage.getItem('selectedTeamNames') || '[]');
+    document.querySelectorAll('#ourLeaderboard tbody tr[data-team-name]').forEach(tr => {
+      tr.classList.toggle('highlight', savedNames.includes(tr.dataset.teamName));
+    });
+  });
+  const poolCard = document.querySelector('.leaderboard-box:first-child .card');
+  if (poolCard) poolCard.insertAdjacentElement('afterend', btn);
+}
+
+function reApplyExpanded() {
+  document.querySelectorAll('#ourLeaderboard tbody tr[data-team-name]').forEach(tr => {
+    if (expandedTeams.has(tr.dataset.teamName)) {
+      const btn = tr.querySelector('.team-expand-btn');
+      if (btn && btn.dataset.expanded === 'false') btn.click();
+    }
+  });
 }
 
 // ── SG helpers ────────────────────────────────────────────────────────────────
@@ -210,31 +327,65 @@ function renderMastersTable(players) {
   const table = document.getElementById('mastersLeaderboard');
   table.innerHTML = '';
   const thead = document.createElement('thead');
-  thead.innerHTML = '<tr><th>Pos</th><th>Player</th><th>Score</th><th>Thru</th><th>Today</th><th>Est. Earnings</th></tr>';
+  thead.innerHTML = '<tr><th>Pos</th><th>Player</th><th>Score</th><th>Thru</th><th>Today</th><th>Win %</th><th>Pool</th><th>Earnings</th></tr>';
   table.appendChild(thead);
   const tbody = document.createElement('tbody');
   const sgLabels = ['SG Putt','SG ARG','SG APP','SG OTT','SG T2G','SG Total'];
   const sgKeys   = ['sg_putt','sg_arg','sg_app','sg_ott','sg_t2g','sg_total'];
+
+  let cutSeparatorInserted = false;
+
   (players || []).forEach((p, i) => {
+    // Insert cut line separator before first CUT/WD player, or after position 50
+    if (!cutSeparatorInserted) {
+      const isCut = p.status === 'cut' || p.status === 'wd' || p.status === 'dq';
+      if (isCut || i === 50) {
+        const sep = document.createElement('tr');
+        sep.className = 'cut-separator';
+        sep.innerHTML = `<td colspan="8" class="cut-separator-cell">— ${isCut ? 'Cut' : 'Projected Cut'} —</td>`;
+        tbody.appendChild(sep);
+        cutSeparatorInserted = true;
+      }
+    }
+
     const hasSG = p.sg && sgKeys.some(k => p.sg[k] != null);
     const rowId = `sg-${i}`;
     const tr = document.createElement('tr');
     tr.dataset.playerName = p.name;
     if (p.status && p.status !== 'active') tr.classList.add('status-' + p.status);
-    const expandBtn = hasSG ? `<button class="expand-btn" data-target="${rowId}" aria-label="Show SG stats">&#9658;</button>` : '';
+
+    // Hot round: today ≤ -3
+    const todayNum = p.today && p.today !== '-' && p.today !== 'E'
+      ? parseInt(p.today.replace('+', ''), 10) : NaN;
+    const isHot = !isNaN(todayNum) && todayNum <= -3;
+
+    const expandBtn = hasSG
+      ? `<button class="expand-btn" data-target="${rowId}" aria-label="Show SG stats">&#9658;</button>`
+      : '';
+
+    const winDisplay = p.winPct != null
+      ? `<span style="${winPctStyle(p.winPct)}">${p.winPct.toFixed(1)}%</span>`
+      : '—';
+    const ownDisplay = p.ownership > 0
+      ? `<span${p.ownership >= 20 ? ' style="font-weight:600;color:var(--text)"' : ''}>${p.ownership}%</span>`
+      : '—';
+
     tr.innerHTML =
       `<td>${esc(String(p.position))}</td>` +
       `<td>${expandBtn}${esc(p.name)}</td>` +
-      `<td class="score-cell ${scoreClass(p.score)}">${esc(p.score)}</td>` +
+      `<td class="${scoreClass(p.score)}">${esc(p.score)}</td>` +
       `<td>${esc(p.thru)}</td>` +
-      `<td class="${scoreClass(p.today)}">${esc(p.today)}</td>` +
+      `<td class="${scoreClass(p.today)}${isHot ? ' hot-round' : ''}">${esc(p.today)}</td>` +
+      `<td class="win-pct-cell">${winDisplay}</td>` +
+      `<td class="ownership-cell">${ownDisplay}</td>` +
       `<td class="money-cell">${formatMoney(p.earnings)}</td>`;
     tbody.appendChild(tr);
+
     if (hasSG) {
       const sgRow = document.createElement('tr');
       sgRow.className = 'sg-row';
       sgRow.id = rowId;
-      sgRow.innerHTML = `<td colspan="6"><div class="sg-grid">${
+      sgRow.innerHTML = `<td colspan="8"><div class="sg-grid">${
         sgKeys.map((k, j) =>
           `<div class="sg-cell" style="background:${sgBg(p.sg[k])}">` +
           `<div class="sg-cell-label">${sgLabels[j]}</div>` +
@@ -245,6 +396,7 @@ function renderMastersTable(players) {
       tbody.appendChild(sgRow);
     }
   });
+
   table.appendChild(tbody);
   table.addEventListener('click', function(e) {
     const btn = e.target.closest('.expand-btn');
@@ -265,12 +417,13 @@ function buildSummaryTable(selectedNames) {
   const selected = allEntries.filter(e => selectedNames.includes(e.name));
   const table = document.createElement('table');
   const thead = document.createElement('thead');
-  thead.innerHTML = '<tr><th>Pos</th><th>Team</th><th>Trend</th><th>Day</th><th>Total</th></tr>';
+  thead.innerHTML = '<tr><th></th><th>Pos</th><th>Team</th><th>Trend</th><th>Day</th><th>Total</th></tr>';
   table.appendChild(thead);
   const tbody = document.createElement('tbody');
   selected.forEach(entry => {
     const tr = document.createElement('tr');
     tr.innerHTML =
+      `<td></td>` +
       `<td>${esc(String(entry.rank))}</td>` +
       `<td>${esc(entry.name)}</td>` +
       `<td class="spark-cell">${renderSparkline(entry.history, entry.rank)}</td>` +
@@ -300,14 +453,14 @@ function initTeamSelector(entries) {
   });
   const savedNames = JSON.parse(localStorage.getItem('selectedTeamNames') || '[]');
   savedNames.forEach(name => choices.setChoiceByValue(name));
-  document.querySelectorAll('#ourLeaderboard tbody tr').forEach(tr => {
+  document.querySelectorAll('#ourLeaderboard tbody tr[data-team-name]').forEach(tr => {
     if (savedNames.includes(tr.dataset.teamName)) tr.classList.add('highlight');
   });
   buildSummaryTable(savedNames);
   teamSelect.addEventListener('change', function () {
     const selected = Array.from(this.selectedOptions).map(o => o.value);
     localStorage.setItem('selectedTeamNames', JSON.stringify(selected));
-    document.querySelectorAll('#ourLeaderboard tbody tr').forEach(tr => {
+    document.querySelectorAll('#ourLeaderboard tbody tr[data-team-name]').forEach(tr => {
       tr.classList.toggle('highlight', selected.includes(tr.dataset.teamName));
     });
     buildSummaryTable(selected);
@@ -321,7 +474,7 @@ const lastMastersSnap = new Map();
 function flashCell(cell) {
   if (!cell) return;
   cell.classList.remove('cell-flash');
-  void cell.offsetWidth; // force reflow so animation restarts
+  void cell.offsetWidth;
   cell.classList.add('cell-flash');
   setTimeout(() => cell.classList.remove('cell-flash'), 1500);
 }
@@ -363,8 +516,8 @@ function applyPoolFlash(changed) {
   document.querySelectorAll('#ourLeaderboard tbody tr[data-team-name]').forEach(tr => {
     const fields = changed.get(tr.dataset.teamName);
     if (!fields) return;
-    if (fields.has('rank'))     flashCell(tr.cells[0]);
-    if (fields.has('earnings')) flashCell(tr.cells[4]);
+    if (fields.has('rank'))     flashCell(tr.cells[1]); // col 0 = expand btn
+    if (fields.has('earnings')) flashCell(tr.cells[5]);
   });
 }
 
@@ -376,7 +529,20 @@ function applyMastersFlash(changed) {
     if (fields.has('score'))    flashCell(tr.cells[2]);
     if (fields.has('thru'))     flashCell(tr.cells[3]);
     if (fields.has('today'))    flashCell(tr.cells[4]);
-    if (fields.has('earnings')) flashCell(tr.cells[5]);
+    if (fields.has('earnings')) flashCell(tr.cells[7]); // col 7 with Win% + Pool added
+  });
+}
+
+// ── Masters collapsible on mobile ─────────────────────────────────────────────
+function initMastersCollapsible() {
+  const header = document.getElementById('mastersCardHeader');
+  const body   = document.getElementById('mastersCardBody');
+  const toggle = header ? header.querySelector('.masters-toggle') : null;
+  if (!header || !body) return;
+  header.addEventListener('click', () => {
+    if (window.innerWidth > 600) return;
+    body.classList.toggle('expanded');
+    if (toggle) toggle.textContent = body.classList.contains('expanded') ? '▼' : '▶';
   });
 }
 
@@ -388,10 +554,11 @@ function loadData() {
     .then(r => r.json())
     .then(data => {
       if (data.status === 'no_tournament') {
-        ['ourLeaderboard','mastersLeaderboard'].forEach(id => {
-          const t = document.getElementById(id);
-          if (t) t.innerHTML = '<tbody><tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted)">Tournament not yet underway — check back in April!</td></tr></tbody>';
-        });
+        const msg = 'style="text-align:center;padding:32px;color:var(--text-muted)"';
+        const t1 = document.getElementById('ourLeaderboard');
+        const t2 = document.getElementById('mastersLeaderboard');
+        if (t1) t1.innerHTML = `<tbody><tr><td colspan="6" ${msg}>Tournament not yet underway — check back in April!</td></tr></tbody>`;
+        if (t2) t2.innerHTML = `<tbody><tr><td colspan="8" ${msg}>Tournament not yet underway — check back in April!</td></tr></tbody>`;
         return;
       }
       if (data.lastUpdated) {
@@ -406,8 +573,9 @@ function loadData() {
       renderMastersTable(masters);
       applyPoolFlash(poolChanges);
       applyMastersFlash(mastersChanges);
+      reApplyExpanded();
       const savedNames = JSON.parse(localStorage.getItem('selectedTeamNames') || '[]');
-      document.querySelectorAll('#ourLeaderboard tbody tr').forEach(tr => {
+      document.querySelectorAll('#ourLeaderboard tbody tr[data-team-name]').forEach(tr => {
         tr.classList.toggle('highlight', savedNames.includes(tr.dataset.teamName));
       });
       allEntries = pool;
@@ -421,8 +589,13 @@ function loadData() {
     .catch(err => console.error('Leaderboard load failed:', err));
 }
 
-renderSkeleton('ourLeaderboard', 5);
-renderSkeleton('mastersLeaderboard', 6);
+// ── Init ──────────────────────────────────────────────────────────────────────
+const wy = document.getElementById('welcomeYear');
+if (wy) wy.textContent = new Date().getFullYear() + ' Masters';
+
+initMastersCollapsible();
+renderSkeleton('ourLeaderboard', 6);
+renderSkeleton('mastersLeaderboard', 8);
 loadData();
 setInterval(loadData, 60000);
 </script>

@@ -297,6 +297,32 @@ function buildMastersLeaderboard(players, earningsMap) {
   });
 }
 
+// ---------- In-Play Predictions (win %, top 5, make cut) ----------
+
+async function fetchInPlayPreds() {
+  const key = process.env.DATAGOLF_API_KEY;
+  if (!key) return {};
+
+  const url = 'https://feeds.datagolf.com/preds/in-play' +
+    '?tour=pga&dead_heat=no&odds_format=percent&key=' + key;
+
+  const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+  if (!r.ok) throw new Error(`In-play preds ${r.status}`);
+  const json = await r.json();
+
+  const map = {};
+  for (const p of (json.players || [])) {
+    const rawName = p.player_name || '';
+    if (!rawName) continue;
+    map[canonicalizeName(rawName)] = {
+      win:      p.win      ?? null,
+      top_5:    p.top_5    ?? null,
+      make_cut: p.make_cut ?? null,
+    };
+  }
+  return map;
+}
+
 // ---------- Strokes Gained ----------
 
 async function fetchSGStats() {
@@ -343,6 +369,7 @@ module.exports = {
   fetchPoolEntries,
   fetchPayoutTable,
   fetchSGStats,
+  fetchInPlayPreds,
   buildEarningsMap,
   computeStandings,
   buildMastersLeaderboard,

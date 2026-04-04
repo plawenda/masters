@@ -1,7 +1,7 @@
 'use strict';
 
 const { getStore }           = require('@netlify/blobs');
-const { fetchLiveScores, fetchPoolEntries, fetchPayoutTable, fetchSGStats,
+const { fetchLiveScores, fetchPoolEntries, fetchPayoutTable, fetchSGStats, fetchInPlayPreds,
         buildEarningsMap, computeStandings, buildMastersLeaderboard, normalizeName } = require('./lib/pool-calc');
 
 const ALLOWED_ORIGIN = process.env.URL || 'https://masters-pool.org';
@@ -83,13 +83,24 @@ function computeMovement(entryName, currentRank, snapshots) {
 
 exports.handler = async () => {
   try {
-    const [scoreData, entries, snapshots, sgMap, payoutMap] = await Promise.all([
+    const [scoreData, entries, snapshots, sgMap, payoutMap, predMap] = await Promise.all([
       fetchLiveScores(),
       fetchPoolEntries(),
       getTodaySnapshots(),
       fetchSGStats().catch(e => { console.warn('SG fetch failed:', e.message); return {}; }),
       fetchPayoutTable().catch(e => { console.warn('Payout table failed, using hardcoded PURSE:', e.message); return {}; }),
+      fetchInPlayPreds().catch(e => { console.warn('In-play preds failed:', e.message); return {}; }),
     ]);
+
+    // Golfer ownership: how many pool teams selected each player
+    const ownershipMap = {};
+    for (const entry of entries) {
+      for (const golferName of entry.golfers) {
+        const key = normalizeName(golferName);
+        ownershipMap[key] = (ownershipMap[key] || 0) + 1;
+      }
+    }
+    const totalTeams = entries.length;
 
     if (!scoreData.players.length) {
       return {
@@ -101,10 +112,19 @@ exports.handler = async () => {
 
     const earningsMap        = buildEarningsMap(scoreData.players, payoutMap);
     const standings          = computeStandings(entries, scoreData.players, earningsMap);
-    const mastersLeaderboard = buildMastersLeaderboard(scoreData.players, earningsMap).map(p => ({
-      ...p,
-      sg: sgMap[normalizeName(p.name)] ?? null,
-    }));
+    const mastersLeaderboard = buildMastersLeaderboard(scoreData.players, earningsMap).map(p => {
+      const nameKey = normalizeName(p.name);
+      const preds   = predMap[nameKey] ?? {};
+      return {
+        ...p,
+        sg:             sgMap[nameKey]   ?? null,
+        winPct:         preds.win        ?? null,
+        top5Pct:        preds.top_5      ?? null,
+        makeCutPct:     preds.make_cut   ?? null,
+        ownership:      totalTeams > 0 ? Math.round((ownershipMap[nameKey] || 0) / totalTeams * 100) : 0,
+        ownershipCount: ownershipMap[nameKey] || 0,
+      };
+    });
 
     // Write a snapshot if none exists recently (fallback for unreliable cron)
     maybeWriteSnapshot(standings, snapshots);
