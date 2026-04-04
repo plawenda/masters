@@ -110,8 +110,8 @@
     .sg-row td { padding: 0; border-top: none; }
     .sg-grid { display: flex; gap: 6px; flex-wrap: wrap; padding: 10px 14px 12px; }
     .sg-cell { flex: 1; min-width: 76px; padding: 7px 8px; border-radius: 6px; text-align: center; }
-    .sg-cell-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); margin-bottom: 3px; }
-    .sg-cell-val { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; color: var(--text); }
+    .sg-cell-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(0,0,0,0.45); margin-bottom: 3px; }
+    .sg-cell-val { font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 600; color: var(--text); }
 
     /* ── Masters table: new columns ── */
     .win-pct-cell { text-align: center; font-family: 'DM Mono', monospace; font-size: 13px; white-space: nowrap; }
@@ -131,67 +131,65 @@
     .hot-round { font-weight: 700; }
     #mastersCardBody { overflow-x: auto; }
 
+    /* ── Pool table: SOD + Move columns ── */
+    .sod-cell { text-align: center; font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text-muted); }
+    .move-cell { text-align: center; white-space: nowrap; min-width: 40px; }
+
     /* ── Team detail card (expanded golfer view) ── */
     .team-detail-row > td {
       padding: 0 !important;
-      background: transparent;
       border-bottom: 2px solid var(--border);
     }
     .team-detail-card {
-      background: linear-gradient(to bottom, rgba(0,103,71,0.04), rgba(0,103,71,0.07));
       border-left: 3px solid var(--green);
+      background: linear-gradient(to bottom, rgba(0,103,71,0.03), rgba(0,103,71,0.06));
     }
-    .team-golfer-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 7px 14px 7px 10px;
-      border-bottom: 1px solid rgba(0,103,71,0.08);
+    .detail-inner-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .detail-inner-table thead th {
+      background: rgba(0,103,71,0.1) !important;
+      color: var(--text-muted) !important;
+      font-family: 'DM Sans', sans-serif !important;
+      font-size: 10px !important;
+      font-weight: 600 !important;
+      letter-spacing: 1px !important;
+      text-transform: uppercase !important;
+      padding: 5px 10px !important;
+      text-align: left !important;
+      border-bottom: 1px solid rgba(0,103,71,0.12) !important;
+      position: static !important;
     }
-    .team-golfer-row:last-child { border-bottom: none; }
-    .team-golfer-row.tgr-inactive { opacity: 0.45; }
-    .tgr-pos {
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      color: var(--text-muted);
-      width: 30px;
-      flex-shrink: 0;
-      text-align: right;
-    }
-    .tgr-name {
-      flex: 1;
+    .detail-inner-table thead th.th-right { text-align: right !important; }
+    .detail-inner-table tbody td {
+      padding: 7px 10px;
+      font-family: 'DM Sans', sans-serif;
       font-size: 13px;
-      font-weight: 500;
       color: var(--text);
-      min-width: 0;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      border-bottom: 1px solid rgba(0,103,71,0.07);
     }
-    .tgr-score {
-      font-family: 'DM Mono', monospace;
-      font-size: 13px;
-      font-weight: 600;
-      width: 34px;
-      text-align: right;
-      flex-shrink: 0;
+    .detail-inner-table tbody tr:last-child td { border-bottom: none; }
+    .detail-inner-table tbody tr:hover { background: rgba(0,103,71,0.05); }
+    .detail-inner-table .td-inactive { opacity: 0.45; }
+    .detail-inner-table .td-pos {
+      font-family: 'DM Mono', monospace !important;
+      font-size: 11px !important;
+      color: var(--text-muted) !important;
+      width: 36px; text-align: right;
     }
-    .tgr-today {
-      font-family: 'DM Mono', monospace;
-      font-size: 12px;
-      color: var(--text-muted);
-      width: 34px;
-      text-align: right;
-      flex-shrink: 0;
+    .detail-inner-table .td-score {
+      font-family: 'DM Mono', monospace !important;
+      font-weight: 600 !important;
+      text-align: right; width: 42px;
     }
-    .tgr-earnings {
-      font-family: 'DM Mono', monospace;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--green);
-      width: 60px;
+    .detail-inner-table .td-today {
+      font-family: 'DM Mono', monospace !important;
+      font-size: 12px !important;
+      text-align: right; width: 42px;
+    }
+    .detail-inner-table .td-earnings {
+      font-family: 'DM Mono', monospace !important;
+      font-weight: 700 !important;
+      color: var(--green) !important;
       text-align: right;
-      flex-shrink: 0;
     }
   </style>
 </head>
@@ -287,7 +285,7 @@ function renderPoolTable(entries) {
   const table = document.getElementById('ourLeaderboard');
   table.innerHTML = '';
   const thead = document.createElement('thead');
-  thead.innerHTML = '<tr><th></th><th>Pos</th><th>Team</th><th>Trend</th><th>Day</th><th>Total</th></tr>';
+  thead.innerHTML = '<tr><th></th><th>Pos</th><th>Team</th><th>SOD</th><th>Δ</th><th>Total</th></tr>';
   table.appendChild(thead);
   const tbody = document.createElement('tbody');
   const visible = entries.slice(0, visibleCount);
@@ -298,12 +296,18 @@ function renderPoolTable(entries) {
     if (entry.rank === 1) tr.classList.add('is-leader');
     const peakStar = (entry.peakRank === 1 && entry.rank !== 1)
       ? `<span class="peak-badge" title="Led the pool at some point today">★</span>` : '';
+    const hasHistory = entry.history && entry.history.length > 0;
+    const sod = hasHistory ? entry.history[0].rank : '—';
+    const move = entry.dailyMove || 0;
+    const moveHtml = hasHistory && move !== 0
+      ? (move > 0 ? `<span class="move-up">▲${move}</span>` : `<span class="move-down">▼${Math.abs(move)}</span>`)
+      : '—';
     tr.innerHTML =
       `<td><button class="team-expand-btn" aria-label="Toggle golfers" data-expanded="false">▶</button></td>` +
       `<td>${esc(String(entry.rank))}</td>` +
       `<td>${esc(entry.name)}${peakStar}</td>` +
-      `<td class="spark-cell">${renderSparkline(entry.history, entry.rank)}</td>` +
-      `<td class="today-cell">${moveBadge(entry.dailyMove)}</td>` +
+      `<td class="sod-cell">${sod}</td>` +
+      `<td class="move-cell">${moveHtml}</td>` +
       `<td class="money-cell">${formatMoney(entry.totalEarnings)}</td>`;
     tbody.appendChild(tr);
 
@@ -316,15 +320,19 @@ function renderPoolTable(entries) {
     const golferRows = (entry.golfers || []).map(g => {
       const inactive = g.status && g.status !== 'active';
       const earnStr = g.earnings > 0 ? formatMoney(g.earnings) : '—';
-      return `<div class="team-golfer-row${inactive ? ' tgr-inactive' : ''}">` +
-        `<span class="tgr-pos">${esc(String(g.position))}</span>` +
-        `<span class="tgr-name">${esc(g.name)}</span>` +
-        `<span class="tgr-score ${scoreClass(g.score)}">${esc(g.score)}</span>` +
-        `<span class="tgr-today ${scoreClass(g.today)}">${esc(g.today)}</span>` +
-        `<span class="tgr-earnings">${earnStr}</span>` +
-        `</div>`;
+      return `<tr${inactive ? ' class="td-inactive"' : ''}>` +
+        `<td class="td-pos">${esc(String(g.position))}</td>` +
+        `<td>${esc(g.name)}</td>` +
+        `<td class="td-score ${scoreClass(g.score)}">${esc(g.score)}</td>` +
+        `<td class="td-today ${scoreClass(g.today)}">${esc(g.today)}</td>` +
+        `<td class="td-earnings">${earnStr}</td>` +
+        `</tr>`;
     }).join('');
-    detailTd.innerHTML = `<div class="team-detail-card">${golferRows}</div>`;
+    detailTd.innerHTML =
+      `<div class="team-detail-card"><table class="detail-inner-table">` +
+      `<thead><tr><th></th><th>Golfer</th><th class="th-right">Total</th><th class="th-right">Today</th><th class="th-right">Earnings</th></tr></thead>` +
+      `<tbody>${golferRows}</tbody>` +
+      `</table></div>`;
     detailTr.appendChild(detailTd);
     tbody.appendChild(detailTr);
 
@@ -447,8 +455,9 @@ function renderMastersTable(players) {
       ? `<button class="expand-btn" data-target="${rowId}" aria-label="Show SG stats">&#9658;</button>`
       : '';
 
-    const winDisplay = p.winPct != null
-      ? `<span style="${winPctStyle(p.winPct)}">${p.winPct.toFixed(1)}%</span>`
+    const winPct100 = p.winPct != null ? p.winPct * 100 : null;
+    const winDisplay = winPct100 != null
+      ? `<span style="${winPctStyle(winPct100)}">${winPct100.toFixed(1)}%</span>`
       : '—';
     const ownDisplay = p.ownership > 0
       ? `<span${p.ownership >= 20 ? ' style="font-weight:600;color:var(--text)"' : ''}>${p.ownership}%</span>`
@@ -501,17 +510,23 @@ function buildSummaryTable(selectedNames) {
   const selected = allEntries.filter(e => selectedNames.includes(e.name));
   const table = document.createElement('table');
   const thead = document.createElement('thead');
-  thead.innerHTML = '<tr><th></th><th>Pos</th><th>Team</th><th>Trend</th><th>Day</th><th>Total</th></tr>';
+  thead.innerHTML = '<tr><th></th><th>Pos</th><th>Team</th><th>SOD</th><th>Δ</th><th>Total</th></tr>';
   table.appendChild(thead);
   const tbody = document.createElement('tbody');
   selected.forEach(entry => {
     const tr = document.createElement('tr');
+    const hasHistory = entry.history && entry.history.length > 0;
+    const sod = hasHistory ? entry.history[0].rank : '—';
+    const move = entry.dailyMove || 0;
+    const moveHtml = hasHistory && move !== 0
+      ? (move > 0 ? `<span class="move-up">▲${move}</span>` : `<span class="move-down">▼${Math.abs(move)}</span>`)
+      : '—';
     tr.innerHTML =
       `<td></td>` +
       `<td>${esc(String(entry.rank))}</td>` +
       `<td>${esc(entry.name)}</td>` +
-      `<td class="spark-cell">${renderSparkline(entry.history, entry.rank)}</td>` +
-      `<td class="today-cell">${moveBadge(entry.dailyMove)}</td>` +
+      `<td class="sod-cell">${sod}</td>` +
+      `<td class="move-cell">${moveHtml}</td>` +
       `<td class="money-cell">${formatMoney(entry.totalEarnings)}</td>`;
     tbody.appendChild(tr);
   });

@@ -211,6 +211,7 @@ tbody tr.highlight td:first-child { border-left: 3px solid var(--green); padding
 .spark-cell { width: 72px; text-align: center; padding: 4px 6px; }
 .sparkline-svg { display: block; margin: 0 auto; overflow: visible; }
 .today-cell { white-space: nowrap; text-align: center; min-width: 44px; }
+.money-cell { font-family: 'DM Mono', monospace; font-variant-numeric: tabular-nums; text-align: right; }
 .peak-badge { color: var(--gold); font-size: 10px; margin-left: 4px; vertical-align: middle; cursor: default; }
 
 /* ── Skeleton loader ─────────────────────────────────────────────────────────── */
