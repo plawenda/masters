@@ -515,6 +515,7 @@ function buildSummaryTable(selectedNames) {
   const tbody = document.createElement('tbody');
   selected.forEach(entry => {
     const tr = document.createElement('tr');
+    tr.dataset.teamName = entry.name;
     const hasHistory = entry.history && entry.history.length > 0;
     const sod = hasHistory ? entry.history[0].rank : '—';
     const move = entry.dailyMove || 0;
@@ -522,13 +523,44 @@ function buildSummaryTable(selectedNames) {
       ? (move > 0 ? `<span class="move-up">▲${move}</span>` : `<span class="move-down">▼${Math.abs(move)}</span>`)
       : '—';
     tr.innerHTML =
-      `<td></td>` +
+      `<td><button class="team-expand-btn" aria-label="Toggle golfers" data-expanded="false">▶</button></td>` +
       `<td>${esc(String(entry.rank))}</td>` +
       `<td>${esc(entry.name)}</td>` +
       `<td class="sod-cell">${sod}</td>` +
       `<td class="move-cell">${moveHtml}</td>` +
       `<td class="money-cell">${formatMoney(entry.totalEarnings)}</td>`;
     tbody.appendChild(tr);
+
+    const detailTr = document.createElement('tr');
+    detailTr.classList.add('team-detail-row');
+    detailTr.style.display = 'none';
+    const detailTd = document.createElement('td');
+    detailTd.colSpan = 6;
+    const golferRows = (entry.golfers || []).map(g => {
+      const inactive = g.status && g.status !== 'active';
+      const earnStr = g.earnings > 0 ? formatMoney(g.earnings) : '—';
+      return `<tr${inactive ? ' class="td-inactive"' : ''}>` +
+        `<td class="td-pos">${esc(String(g.position))}</td>` +
+        `<td>${esc(g.name)}</td>` +
+        `<td class="td-score ${scoreClass(g.score)}">${esc(g.score)}</td>` +
+        `<td class="td-today ${scoreClass(g.today)}">${esc(g.today)}</td>` +
+        `<td class="td-earnings">${earnStr}</td>` +
+        `</tr>`;
+    }).join('');
+    detailTd.innerHTML =
+      `<div class="team-detail-card"><table class="detail-inner-table">` +
+      `<thead><tr><th></th><th>Golfer</th><th class="th-right">Total</th><th class="th-right">Today</th><th class="th-right">Earnings</th></tr></thead>` +
+      `<tbody>${golferRows}</tbody>` +
+      `</table></div>`;
+    detailTr.appendChild(detailTd);
+    tbody.appendChild(detailTr);
+
+    tr.querySelector('.team-expand-btn').addEventListener('click', function () {
+      const expanded = this.dataset.expanded === 'true';
+      this.dataset.expanded = String(!expanded);
+      this.textContent = expanded ? '▶' : '▼';
+      detailTr.style.display = expanded ? 'none' : '';
+    });
   });
   table.appendChild(tbody);
   summaryDiv.innerHTML = '';
