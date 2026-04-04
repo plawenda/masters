@@ -253,6 +253,28 @@ tbody tr.highlight td:first-child { border-left: 3px solid var(--green); padding
 .today-cell { white-space: nowrap; text-align: center; min-width: 44px; }
 .peak-badge { color: var(--gold); font-size: 10px; margin-left: 4px; vertical-align: middle; cursor: default; }
 
+/* ── Skeleton loader ─────────────────────────────────────────────────────────── */
+.skel {
+  display: inline-block;
+  height: 10px;
+  width: 60%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--border) 25%, var(--surface2) 50%, var(--border) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+
+/* ── Cell flash on live data change ──────────────────────────────────────────── */
+@keyframes cellFlash {
+  0%   { background-color: rgba(200,149,42,0.35); }
+  100% { background-color: transparent; }
+}
+.cell-flash { animation: cellFlash 1.5s ease-out forwards; }
+
+/* ── Pool leader row highlight ───────────────────────────────────────────────── */
+tbody tr.is-leader { background: var(--gold-dim) !important; }
+tbody tr.is-leader:hover { background: rgba(184,151,46,0.2) !important; }
+
 /* ── Team selector ───────────────────────────────────────────────────────────── */
 .selector-card {
   background: var(--surface);

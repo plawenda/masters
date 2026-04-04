@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="60">
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Masters Pool — Detailed Leaderboard</title>
   <link rel="icon" type="image/png" href="masters_pool_logo.png">
@@ -120,6 +120,21 @@
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 <script src="shared.js"></script>
 <script>
+// ── Skeleton ──────────────────────────────────────────────────────────────────
+function renderSkeleton(tableId, cols) {
+  const t = document.getElementById(tableId);
+  if (!t) return;
+  let html = '<tbody>';
+  for (let i = 0; i < 8; i++) {
+    html += '<tr>' + Array(cols).fill('<td><span class="skel"></span></td>').join('') + '</tr>';
+  }
+  html += '</tbody>';
+  t.innerHTML = html;
+}
+
+// ── Render detailed table ─────────────────────────────────────────────────────
+const expandedTeams = new Set();
+
 function renderDetailedTable(entries) {
   const table = document.getElementById('ourLeaderboard');
   table.innerHTML = '';
@@ -130,6 +145,7 @@ function renderDetailedTable(entries) {
   (entries || []).forEach(entry => {
     const tr = document.createElement('tr');
     tr.dataset.teamName = entry.name;
+    if (entry.rank === 1) tr.classList.add('is-leader');
     const peakStar = (entry.peakRank === 1 && entry.rank !== 1)
       ? '<span class="peak-badge" title="Led the pool at some point today">★</span>' : '';
     tr.innerHTML =
@@ -161,11 +177,14 @@ function renderDetailedTable(entries) {
       this.dataset.expanded = String(!expanded);
       this.textContent = expanded ? '▶' : '▼';
       detailRows.forEach(dtr => { dtr.style.display = expanded ? 'none' : ''; });
+      if (!expanded) expandedTeams.add(entry.name);
+      else expandedTeams.delete(entry.name);
     });
   });
   table.appendChild(tbody);
 }
 
+// ── Team selector ─────────────────────────────────────────────────────────────
 let allEntries = [];
 
 function buildSummaryTable(selectedNames) {
@@ -224,18 +243,82 @@ function initTeamSelector(entries) {
   });
 }
 
-fetch('/api/leaderboard')
-  .then(r => r.json())
-  .then(data => {
-    if (data.status === 'no_tournament') {
-      document.getElementById('ourLeaderboard').innerHTML =
-        '<tbody><tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted)">Tournament not yet underway — check back in April!</td></tr></tbody>';
-      return;
+// ── Diff + flash on data change ───────────────────────────────────────────────
+const lastDetailSnap = new Map();
+
+function flashCell(cell) {
+  if (!cell) return;
+  cell.classList.remove('cell-flash');
+  void cell.offsetWidth;
+  cell.classList.add('cell-flash');
+  setTimeout(() => cell.classList.remove('cell-flash'), 1500);
+}
+
+function diffAndSnapshotDetail(entries) {
+  const changed = new Map();
+  entries.forEach(e => {
+    const prev = lastDetailSnap.get(e.name);
+    if (prev) {
+      const fields = new Set();
+      if (prev.rank !== e.rank) fields.add('rank');
+      if (prev.totalEarnings !== e.totalEarnings) fields.add('earnings');
+      if (fields.size) changed.set(e.name, fields);
     }
-    renderDetailedTable(data.poolLeaderboard);
-    initTeamSelector(data.poolLeaderboard || []);
-  })
-  .catch(err => console.error('Leaderboard load failed:', err));
+    lastDetailSnap.set(e.name, { rank: e.rank, totalEarnings: e.totalEarnings });
+  });
+  return changed;
+}
+
+function applyDetailFlash(changed) {
+  document.querySelectorAll('#ourLeaderboard tbody tr[data-team-name]').forEach(tr => {
+    const fields = changed.get(tr.dataset.teamName);
+    if (!fields) return;
+    if (fields.has('rank'))     flashCell(tr.cells[1]); // col 0 = expand btn
+    if (fields.has('earnings')) flashCell(tr.cells[5]);
+  });
+}
+
+// ── Main data load (polling) ──────────────────────────────────────────────────
+let choicesInitialized = false;
+
+function loadData() {
+  fetch('/api/leaderboard')
+    .then(r => r.json())
+    .then(data => {
+      if (data.status === 'no_tournament') {
+        document.getElementById('ourLeaderboard').innerHTML =
+          '<tbody><tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted)">Tournament not yet underway — check back in April!</td></tr></tbody>';
+        return;
+      }
+      const pool = data.poolLeaderboard || [];
+      const changed = diffAndSnapshotDetail(pool);
+      renderDetailedTable(pool);
+      applyDetailFlash(changed);
+      // Re-expand rows that were open before the re-render
+      document.querySelectorAll('#ourLeaderboard tbody tr[data-team-name]').forEach(tr => {
+        if (expandedTeams.has(tr.dataset.teamName)) {
+          const btn = tr.querySelector('.expand-btn');
+          if (btn && btn.dataset.expanded === 'false') btn.click();
+        }
+      });
+      const savedNames = JSON.parse(localStorage.getItem('selectedTeamNames') || '[]');
+      document.querySelectorAll('#ourLeaderboard tbody tr:not(.golfer-detail-row)').forEach(tr => {
+        tr.classList.toggle('highlight', savedNames.includes(tr.dataset.teamName));
+      });
+      allEntries = pool;
+      if (!choicesInitialized) {
+        initTeamSelector(pool);
+        choicesInitialized = true;
+      } else {
+        buildSummaryTable(savedNames);
+      }
+    })
+    .catch(err => console.error('Leaderboard load failed:', err));
+}
+
+renderSkeleton('ourLeaderboard', 6);
+loadData();
+setInterval(loadData, 60000);
 </script>
 </body>
 </html>
