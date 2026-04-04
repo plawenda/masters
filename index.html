@@ -274,7 +274,7 @@ function renderPoolTable(entries) {
   const table = document.getElementById('ourLeaderboard');
   table.innerHTML = '';
   const thead = document.createElement('thead');
-  thead.innerHTML = '<tr><th></th><th>Pos</th><th>Team</th><th>SOD</th><th>Δ</th><th>Total</th></tr>';
+  thead.innerHTML = '<tr><th></th><th>Pos</th><th>Team</th><th>SOD</th><th>Δ</th><th style="text-align:right">Total</th></tr>';
   table.appendChild(thead);
   const tbody = document.createElement('tbody');
   const visible = entries.slice(0, visibleCount);
@@ -319,7 +319,7 @@ function renderPoolTable(entries) {
     }).join('');
     detailTd.innerHTML =
       `<div class="team-detail-card"><table class="detail-inner-table">` +
-      `<thead><tr><th></th><th>Golfer</th><th class="th-right">Total</th><th class="th-right">Today</th><th class="th-right">Earnings</th></tr></thead>` +
+      `<thead><tr><th>Pos</th><th>Golfer</th><th class="th-right">Total</th><th class="th-right">Today</th><th class="th-right">Proj. Earn</th></tr></thead>` +
       `<tbody>${golferRows}</tbody>` +
       `</table></div>`;
     detailTr.appendChild(detailTd);
@@ -499,7 +499,7 @@ function buildSummaryTable(selectedNames) {
   const selected = allEntries.filter(e => selectedNames.includes(e.name));
   const table = document.createElement('table');
   const thead = document.createElement('thead');
-  thead.innerHTML = '<tr><th></th><th>Pos</th><th>Team</th><th>SOD</th><th>Δ</th><th>Total</th></tr>';
+  thead.innerHTML = '<tr><th></th><th>Pos</th><th>Team</th><th>SOD</th><th>Δ</th><th style="text-align:right">Total</th></tr>';
   table.appendChild(thead);
   const tbody = document.createElement('tbody');
   selected.forEach(entry => {
@@ -538,7 +538,7 @@ function buildSummaryTable(selectedNames) {
     }).join('');
     detailTd.innerHTML =
       `<div class="team-detail-card"><table class="detail-inner-table">` +
-      `<thead><tr><th></th><th>Golfer</th><th class="th-right">Total</th><th class="th-right">Today</th><th class="th-right">Earnings</th></tr></thead>` +
+      `<thead><tr><th>Pos</th><th>Golfer</th><th class="th-right">Total</th><th class="th-right">Today</th><th class="th-right">Proj. Earn</th></tr></thead>` +
       `<tbody>${golferRows}</tbody>` +
       `</table></div>`;
     detailTr.appendChild(detailTd);
