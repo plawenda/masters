@@ -198,8 +198,7 @@
 </nav>
 
 <div class="welcome-strip">
-  Welcome to the <strong id="welcomeYear"></strong> Masters Pool —
-  may your picks play Augusta better than you could.
+  Welcome to the 16th Annual Masters Pool. I hope it adds a little something extra to your enjoyment of the greatest tournament in golf.
 </div>
 
 <div class="container">
@@ -699,8 +698,6 @@ function loadData() {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-const wy = document.getElementById('welcomeYear');
-if (wy) wy.textContent = new Date().getFullYear() + ' Masters';
 
 initMastersCollapsible();
 renderSkeleton('ourLeaderboard', 4);
