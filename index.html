@@ -121,10 +121,6 @@
     .hot-round { font-weight: 700; }
     #mastersCardBody { overflow-x: auto; }
 
-    /* ── Pool table: SOD + Move columns ── */
-    .sod-cell { text-align: center; font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text-muted); }
-    .move-cell { text-align: center; white-space: nowrap; min-width: 40px; }
-
     /* ── Team detail card (expanded golfer view) ── */
     .team-detail-row > td {
       padding: 0 !important;
@@ -274,7 +270,7 @@ function renderPoolTable(entries) {
   const table = document.getElementById('ourLeaderboard');
   table.innerHTML = '';
   const thead = document.createElement('thead');
-  thead.innerHTML = '<tr><th></th><th>Pos</th><th>Team</th><th>SOD</th><th>Δ</th><th style="text-align:right">Total</th></tr>';
+  thead.innerHTML = '<tr><th></th><th>Pos</th><th>Team</th><th style="text-align:right">Total</th></tr>';
   table.appendChild(thead);
   const tbody = document.createElement('tbody');
   const visible = entries.slice(0, visibleCount);
@@ -285,18 +281,10 @@ function renderPoolTable(entries) {
     if (entry.rank === 1) tr.classList.add('is-leader');
     const peakStar = (entry.peakRank === 1 && entry.rank !== 1)
       ? `<span class="peak-badge" title="Led the pool at some point today">★</span>` : '';
-    const hasHistory = entry.history && entry.history.length > 0;
-    const sod = hasHistory ? entry.history[0].rank : '—';
-    const move = entry.dailyMove || 0;
-    const moveHtml = hasHistory && move !== 0
-      ? (move > 0 ? `<span class="move-up">▲${move}</span>` : `<span class="move-down">▼${Math.abs(move)}</span>`)
-      : '—';
     tr.innerHTML =
       `<td><button class="team-expand-btn" aria-label="Toggle golfers" data-expanded="false">▶</button></td>` +
       `<td>${esc(String(entry.rank))}</td>` +
       `<td>${esc(entry.name)}${peakStar}</td>` +
-      `<td class="sod-cell">${sod}</td>` +
-      `<td class="move-cell">${moveHtml}</td>` +
       `<td class="money-cell">${formatMoney(entry.totalEarnings)}</td>`;
     tbody.appendChild(tr);
 
@@ -304,7 +292,7 @@ function renderPoolTable(entries) {
     detailTr.classList.add('team-detail-row');
     detailTr.style.display = 'none';
     const detailTd = document.createElement('td');
-    detailTd.colSpan = 6;
+    detailTd.colSpan = 4;
     detailTd.className = 'team-detail-td';
     const golferRows = (entry.golfers || []).map(g => {
       const inactive = g.status && g.status !== 'active';
@@ -499,24 +487,16 @@ function buildSummaryTable(selectedNames) {
   const selected = allEntries.filter(e => selectedNames.includes(e.name));
   const table = document.createElement('table');
   const thead = document.createElement('thead');
-  thead.innerHTML = '<tr><th></th><th>Pos</th><th>Team</th><th>SOD</th><th>Δ</th><th style="text-align:right">Total</th></tr>';
+  thead.innerHTML = '<tr><th></th><th>Pos</th><th>Team</th><th style="text-align:right">Total</th></tr>';
   table.appendChild(thead);
   const tbody = document.createElement('tbody');
   selected.forEach(entry => {
     const tr = document.createElement('tr');
     tr.dataset.teamName = entry.name;
-    const hasHistory = entry.history && entry.history.length > 0;
-    const sod = hasHistory ? entry.history[0].rank : '—';
-    const move = entry.dailyMove || 0;
-    const moveHtml = hasHistory && move !== 0
-      ? (move > 0 ? `<span class="move-up">▲${move}</span>` : `<span class="move-down">▼${Math.abs(move)}</span>`)
-      : '—';
     tr.innerHTML =
       `<td><button class="team-expand-btn" aria-label="Toggle golfers" data-expanded="false">▶</button></td>` +
       `<td>${esc(String(entry.rank))}</td>` +
       `<td>${esc(entry.name)}</td>` +
-      `<td class="sod-cell">${sod}</td>` +
-      `<td class="move-cell">${moveHtml}</td>` +
       `<td class="money-cell">${formatMoney(entry.totalEarnings)}</td>`;
     tbody.appendChild(tr);
 
@@ -524,7 +504,7 @@ function buildSummaryTable(selectedNames) {
     detailTr.classList.add('team-detail-row');
     detailTr.style.display = 'none';
     const detailTd = document.createElement('td');
-    detailTd.colSpan = 6;
+    detailTd.colSpan = 4;
     const golferRows = (entry.golfers || []).map(g => {
       const inactive = g.status && g.status !== 'active';
       const earnStr = g.earnings > 0 ? formatMoney(g.earnings) : '—';
@@ -646,7 +626,7 @@ function applyPoolFlash(changed) {
     const fields = changed.get(tr.dataset.teamName);
     if (!fields) return;
     if (fields.has('rank'))     flashCell(tr.cells[1]); // col 0 = expand btn
-    if (fields.has('earnings')) flashCell(tr.cells[5]);
+    if (fields.has('earnings')) flashCell(tr.cells[3]);
   });
 }
 
@@ -686,7 +666,7 @@ function loadData() {
         const msg = 'style="text-align:center;padding:32px;color:var(--text-muted)"';
         const t1 = document.getElementById('ourLeaderboard');
         const t2 = document.getElementById('mastersLeaderboard');
-        if (t1) t1.innerHTML = `<tbody><tr><td colspan="6" ${msg}>Tournament not yet underway — check back in April!</td></tr></tbody>`;
+        if (t1) t1.innerHTML = `<tbody><tr><td colspan="4" ${msg}>Tournament not yet underway — check back in April!</td></tr></tbody>`;
         if (t2) t2.innerHTML = `<tbody><tr><td colspan="8" ${msg}>Tournament not yet underway — check back in April!</td></tr></tbody>`;
         return;
       }
@@ -723,7 +703,7 @@ const wy = document.getElementById('welcomeYear');
 if (wy) wy.textContent = new Date().getFullYear() + ' Masters';
 
 initMastersCollapsible();
-renderSkeleton('ourLeaderboard', 6);
+renderSkeleton('ourLeaderboard', 4);
 renderSkeleton('mastersLeaderboard', 8);
 loadData();
 setInterval(loadData, 60000);
