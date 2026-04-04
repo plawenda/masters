@@ -130,6 +130,69 @@
     }
     .hot-round { font-weight: 700; }
     #mastersCardBody { overflow-x: auto; }
+
+    /* ── Team detail card (expanded golfer view) ── */
+    .team-detail-row > td {
+      padding: 0 !important;
+      background: transparent;
+      border-bottom: 2px solid var(--border);
+    }
+    .team-detail-card {
+      background: linear-gradient(to bottom, rgba(0,103,71,0.04), rgba(0,103,71,0.07));
+      border-left: 3px solid var(--green);
+    }
+    .team-golfer-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 14px 7px 10px;
+      border-bottom: 1px solid rgba(0,103,71,0.08);
+    }
+    .team-golfer-row:last-child { border-bottom: none; }
+    .team-golfer-row.tgr-inactive { opacity: 0.45; }
+    .tgr-pos {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      width: 30px;
+      flex-shrink: 0;
+      text-align: right;
+    }
+    .tgr-name {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .tgr-score {
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      width: 34px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .tgr-today {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+      width: 34px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .tgr-earnings {
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--green);
+      width: 60px;
+      text-align: right;
+      flex-shrink: 0;
+    }
   </style>
 </head>
 <body>
@@ -244,28 +307,32 @@ function renderPoolTable(entries) {
       `<td class="money-cell">${formatMoney(entry.totalEarnings)}</td>`;
     tbody.appendChild(tr);
 
-    const detailRows = (entry.golfers || []).map(g => {
-      const dtr = document.createElement('tr');
-      dtr.classList.add('golfer-detail-row');
-      dtr.style.display = 'none';
-      if (g.status && g.status !== 'active') dtr.classList.add('status-' + g.status);
-      dtr.innerHTML =
-        `<td></td>` +
-        `<td>${esc(String(g.position))}</td>` +
-        `<td class="g-name">${esc(g.name)}</td>` +
-        `<td class="${scoreClass(g.score)}">${esc(g.score)}</td>` +
-        `<td>${esc(g.thru)}</td>` +
-        `<td class="g-earnings money-cell">${formatMoney(g.earnings)}</td>`;
-      tbody.appendChild(dtr);
-      return dtr;
-    });
-    if (detailRows.length > 0) detailRows[detailRows.length - 1].classList.add('group-end');
+    const detailTr = document.createElement('tr');
+    detailTr.classList.add('team-detail-row');
+    detailTr.style.display = 'none';
+    const detailTd = document.createElement('td');
+    detailTd.colSpan = 6;
+    detailTd.className = 'team-detail-td';
+    const golferRows = (entry.golfers || []).map(g => {
+      const inactive = g.status && g.status !== 'active';
+      const earnStr = g.earnings > 0 ? formatMoney(g.earnings) : '—';
+      return `<div class="team-golfer-row${inactive ? ' tgr-inactive' : ''}">` +
+        `<span class="tgr-pos">${esc(String(g.position))}</span>` +
+        `<span class="tgr-name">${esc(g.name)}</span>` +
+        `<span class="tgr-score ${scoreClass(g.score)}">${esc(g.score)}</span>` +
+        `<span class="tgr-today ${scoreClass(g.today)}">${esc(g.today)}</span>` +
+        `<span class="tgr-earnings">${earnStr}</span>` +
+        `</div>`;
+    }).join('');
+    detailTd.innerHTML = `<div class="team-detail-card">${golferRows}</div>`;
+    detailTr.appendChild(detailTd);
+    tbody.appendChild(detailTr);
 
     tr.querySelector('.team-expand-btn').addEventListener('click', function () {
       const expanded = this.dataset.expanded === 'true';
       this.dataset.expanded = String(!expanded);
       this.textContent = expanded ? '▶' : '▼';
-      detailRows.forEach(dtr => { dtr.style.display = expanded ? 'none' : ''; });
+      detailTr.style.display = expanded ? 'none' : '';
       if (!expanded) expandedTeams.add(entry.name);
       else expandedTeams.delete(entry.name);
     });
@@ -322,6 +389,24 @@ function fmtSG(val) {
   return (val >= 0 ? '+' : '') + Number(val).toFixed(2);
 }
 
+// ── Cut separator pre-computation ────────────────────────────────────────────
+function computeCutSeparator(players) {
+  const firstInactiveIdx = players.findIndex(p => p.status !== 'active');
+  if (firstInactiveIdx !== -1) {
+    const lastScore = firstInactiveIdx > 0 ? players[firstInactiveIdx - 1].score : null;
+    return { insertBefore: firstInactiveIdx, score: lastScore, isActual: true };
+  }
+  if (players.length <= 50) return null;
+  const cutScore = players[49].score;
+  // Extend past index 49 if players tied at the cut score
+  let lastTiedIdx = 49;
+  for (let i = 50; i < players.length; i++) {
+    if (players[i].score === cutScore) lastTiedIdx = i;
+    else break;
+  }
+  return { insertBefore: lastTiedIdx + 1, score: cutScore, isActual: false };
+}
+
 // ── Render Masters leaderboard ────────────────────────────────────────────────
 function renderMastersTable(players) {
   const table = document.getElementById('mastersLeaderboard');
@@ -333,19 +418,18 @@ function renderMastersTable(players) {
   const sgLabels = ['SG Putt','SG ARG','SG APP','SG OTT','SG T2G','SG Total'];
   const sgKeys   = ['sg_putt','sg_arg','sg_app','sg_ott','sg_t2g','sg_total'];
 
-  let cutSeparatorInserted = false;
+  const cutInfo = computeCutSeparator(players || []);
+  let cutInserted = false;
 
   (players || []).forEach((p, i) => {
-    // Insert cut line separator before first CUT/WD player, or after position 50
-    if (!cutSeparatorInserted) {
-      const isCut = p.status === 'cut' || p.status === 'wd' || p.status === 'dq';
-      if (isCut || i === 50) {
-        const sep = document.createElement('tr');
-        sep.className = 'cut-separator';
-        sep.innerHTML = `<td colspan="8" class="cut-separator-cell">— ${isCut ? 'Cut' : 'Projected Cut'} —</td>`;
-        tbody.appendChild(sep);
-        cutSeparatorInserted = true;
-      }
+    if (!cutInserted && cutInfo && i === cutInfo.insertBefore) {
+      const scoreLabel = cutInfo.score ? ` ${cutInfo.score}` : '';
+      const label = cutInfo.isActual ? `Cut` : `Projected Cut:${scoreLabel}`;
+      const sep = document.createElement('tr');
+      sep.className = 'cut-separator';
+      sep.innerHTML = `<td colspan="8" class="cut-separator-cell">— ${label} —</td>`;
+      tbody.appendChild(sep);
+      cutInserted = true;
     }
 
     const hasSG = p.sg && sgKeys.some(k => p.sg[k] != null);

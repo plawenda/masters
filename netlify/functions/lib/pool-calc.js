@@ -109,7 +109,7 @@ function playerTotal(p) {
 }
 
 function playerToday(p) {
-  return p.today ?? p.today_score ?? p.round_score ?? p.current_round_score ?? null;
+  return p.today ?? p.today_score ?? p.round ?? p.round_score ?? p.current_round_score ?? null;
 }
 
 function playerThru(p) {
@@ -311,7 +311,7 @@ async function fetchInPlayPreds() {
   const json = await r.json();
 
   const map = {};
-  for (const p of (json.players || [])) {
+  for (const p of (json.players || json.data || [])) {
     const rawName = p.player_name || '';
     if (!rawName) continue;
     map[canonicalizeName(rawName)] = {
