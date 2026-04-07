@@ -180,6 +180,8 @@
     .detail-inner-table .td-dropped {
       opacity: 0.45;
       font-style: italic;
+    }
+    .detail-inner-table .td-dropped .dropped-name {
       text-decoration: line-through;
     }
     .detail-inner-table .td-dropped .td-earnings,
@@ -310,7 +312,7 @@ function renderPoolTable(entries) {
       const rowClass = dropped ? 'td-dropped' : (inactive ? 'td-inactive' : '');
       return `<tr${rowClass ? ` class="${rowClass}"` : ''}>` +
         `<td class="td-pos">${esc(String(g.position))}</td>` +
-        `<td>${esc(g.name)}${dropped ? ' <span style="font-size:10px;font-style:normal;text-decoration:none;color:var(--text-muted);opacity:0.8">removed — over $30</span>' : ''}</td>` +
+        `<td>${dropped ? `<span class="dropped-name">${esc(g.name)}</span> <span style="font-size:10px;font-style:normal;color:var(--text-muted)">removed — over $30</span>` : esc(g.name)}</td>` +
         `<td class="td-score ${scoreClass(g.score)}">${esc(g.score)}</td>` +
         `<td class="td-today ${scoreClass(g.today)}">${esc(g.today)}</td>` +
         `<td class="td-earnings">${dropped ? '—' : earnStr}</td>` +
@@ -523,7 +525,7 @@ function buildSummaryTable(selectedNames) {
       const rowClass = dropped ? 'td-dropped' : (inactive ? 'td-inactive' : '');
       return `<tr${rowClass ? ` class="${rowClass}"` : ''}>` +
         `<td class="td-pos">${esc(String(g.position))}</td>` +
-        `<td>${esc(g.name)}${dropped ? ' <span style="font-size:10px;font-style:normal;text-decoration:none;color:var(--text-muted);opacity:0.8">removed — over $30</span>' : ''}</td>` +
+        `<td>${dropped ? `<span class="dropped-name">${esc(g.name)}</span> <span style="font-size:10px;font-style:normal;color:var(--text-muted)">removed — over $30</span>` : esc(g.name)}</td>` +
         `<td class="td-score ${scoreClass(g.score)}">${esc(g.score)}</td>` +
         `<td class="td-today ${scoreClass(g.today)}">${esc(g.today)}</td>` +
         `<td class="td-earnings">${dropped ? '—' : earnStr}</td>` +
