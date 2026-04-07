@@ -121,6 +121,42 @@
     .hot-round { font-weight: 700; }
     #mastersCardBody { overflow-x: auto; }
 
+    /* ── Pool: row-click expand ─────────────────────────────────────────────── */
+    #ourLeaderboard tbody tr[data-team-name],
+    #teamSummary tbody tr[data-team-name] {
+      cursor: pointer;
+    }
+    .team-row-inner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .team-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .team-expand-chevron {
+      font-size: 9px;
+      color: var(--text-muted);
+      opacity: 0.5;
+      flex-shrink: 0;
+      transition: transform 0.15s ease;
+    }
+    .team-expand-chevron.open { transform: rotate(90deg); }
+
+    /* ── Masters: compact player + round columns ─────────────────────────────── */
+    .player-cell-inner { display: flex; align-items: baseline; gap: 5px; flex-wrap: wrap; }
+    .player-own {
+      font-size: 10px;
+      font-family: 'DM Mono', monospace;
+      color: var(--text-muted);
+      background: var(--surface2);
+      border-radius: 3px;
+      padding: 1px 5px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .round-cell { text-align: center; vertical-align: middle; padding: 4px 10px !important; }
+    .round-thru { display: block; font-size: 10px; color: var(--text-muted); letter-spacing: 0.5px; }
+    .round-today { display: block; font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 600; }
+
     /* ── Team detail card (expanded golfer view) ── */
     .team-detail-row > td {
       padding: 0 !important;
@@ -281,7 +317,7 @@ function renderPoolTable(entries) {
   const table = document.getElementById('ourLeaderboard');
   table.innerHTML = '';
   const thead = document.createElement('thead');
-  thead.innerHTML = '<tr><th></th><th>Pos</th><th>Team</th><th style="text-align:right">Total</th></tr>';
+  thead.innerHTML = '<tr><th style="width:44px">Pos</th><th>Team</th><th style="text-align:right">Total</th></tr>';
   table.appendChild(thead);
   const tbody = document.createElement('tbody');
   const visible = entries.slice(0, visibleCount);
@@ -289,13 +325,13 @@ function renderPoolTable(entries) {
   visible.forEach(entry => {
     const tr = document.createElement('tr');
     tr.dataset.teamName = entry.name;
+    tr.dataset.expanded = 'false';
     if (entry.rank === 1) tr.classList.add('is-leader');
     const peakStar = (entry.peakRank === 1 && entry.rank !== 1)
       ? `<span class="peak-badge" title="Led the pool at some point today">★</span>` : '';
     tr.innerHTML =
-      `<td><button class="team-expand-btn" aria-label="Toggle golfers" data-expanded="false">▶</button></td>` +
-      `<td>${esc(String(entry.rank))}</td>` +
-      `<td>${esc(entry.name)}${peakStar}</td>` +
+      `<td style="font-family:'DM Mono',monospace;font-weight:600;font-size:15px">${esc(String(entry.rank))}</td>` +
+      `<td><div class="team-row-inner"><span class="team-name">${esc(entry.name)}${peakStar}</span><span class="team-expand-chevron">▸</span></div></td>` +
       `<td class="money-cell">${formatMoney(entry.totalEarnings)}</td>`;
     tbody.appendChild(tr);
 
@@ -303,7 +339,7 @@ function renderPoolTable(entries) {
     detailTr.classList.add('team-detail-row');
     detailTr.style.display = 'none';
     const detailTd = document.createElement('td');
-    detailTd.colSpan = 4;
+    detailTd.colSpan = 3;
     detailTd.className = 'team-detail-td';
     const golferRows = (entry.golfers || []).map(g => {
       const inactive = g.status && g.status !== 'active';
@@ -326,10 +362,11 @@ function renderPoolTable(entries) {
     detailTr.appendChild(detailTd);
     tbody.appendChild(detailTr);
 
-    tr.querySelector('.team-expand-btn').addEventListener('click', function () {
+    tr.addEventListener('click', function () {
       const expanded = this.dataset.expanded === 'true';
       this.dataset.expanded = String(!expanded);
-      this.textContent = expanded ? '▶' : '▼';
+      const chevron = this.querySelector('.team-expand-chevron');
+      if (chevron) chevron.classList.toggle('open', !expanded);
       detailTr.style.display = expanded ? 'none' : '';
       if (!expanded) expandedTeams.add(entry.name);
       else expandedTeams.delete(entry.name);
@@ -365,9 +402,8 @@ function renderShowMore(entries) {
 
 function reApplyExpanded() {
   document.querySelectorAll('#ourLeaderboard tbody tr[data-team-name]').forEach(tr => {
-    if (expandedTeams.has(tr.dataset.teamName)) {
-      const btn = tr.querySelector('.team-expand-btn');
-      if (btn && btn.dataset.expanded === 'false') btn.click();
+    if (expandedTeams.has(tr.dataset.teamName) && tr.dataset.expanded !== 'true') {
+      tr.click();
     }
   });
 }
@@ -410,7 +446,7 @@ function renderMastersTable(players) {
   const table = document.getElementById('mastersLeaderboard');
   table.innerHTML = '';
   const thead = document.createElement('thead');
-  thead.innerHTML = '<tr><th>Pos</th><th>Player</th><th>Score</th><th>Thru</th><th>Today</th><th>Win %</th><th>Pool</th><th>Earnings</th></tr>';
+  thead.innerHTML = '<tr><th style="width:44px">Pos</th><th>Player</th><th style="text-align:right">Score</th><th style="text-align:center;width:72px">Round</th><th style="text-align:center;width:68px">Win %</th><th style="text-align:right">Earnings</th></tr>';
   table.appendChild(thead);
   const tbody = document.createElement('tbody');
   const sgLabels = ['SG Putt','SG ARG','SG APP','SG OTT','SG T2G','SG Total'];
@@ -425,7 +461,7 @@ function renderMastersTable(players) {
       const label = cutInfo.isActual ? `Cut` : `Projected Cut:${scoreLabel}`;
       const sep = document.createElement('tr');
       sep.className = 'cut-separator';
-      sep.innerHTML = `<td colspan="8" class="cut-separator-cell">— ${label} —</td>`;
+      sep.innerHTML = `<td colspan="6" class="cut-separator-cell">— ${label} —</td>`;
       tbody.appendChild(sep);
       cutInserted = true;
     }
@@ -449,18 +485,16 @@ function renderMastersTable(players) {
     const winDisplay = winPct100 != null
       ? `<span style="${winPctStyle(winPct100)}">${winPct100.toFixed(1)}%</span>`
       : '—';
-    const ownDisplay = p.ownership > 0
-      ? `<span${p.ownership >= 20 ? ' style="font-weight:600;color:var(--text)"' : ''}>${p.ownership}%</span>`
-      : '—';
+    const ownBadge = p.ownership > 0
+      ? ` <span class="player-own">${p.ownership}%</span>`
+      : '';
 
     tr.innerHTML =
-      `<td>${esc(String(p.position))}</td>` +
-      `<td>${expandBtn}${esc(p.name)}</td>` +
-      `<td class="${scoreClass(p.score)}">${esc(p.score)}</td>` +
-      `<td>${esc(p.thru)}</td>` +
-      `<td class="${scoreClass(p.today)}${isHot ? ' hot-round' : ''}">${esc(p.today)}</td>` +
+      `<td style="font-family:'DM Mono',monospace;font-size:13px">${esc(String(p.position))}</td>` +
+      `<td><div class="player-cell-inner">${expandBtn}<span>${esc(p.name)}</span>${ownBadge}</div></td>` +
+      `<td class="${scoreClass(p.score)}" style="text-align:right;font-family:'DM Mono',monospace;font-weight:600">${esc(p.score)}</td>` +
+      `<td class="round-cell"><span class="round-thru">${esc(p.thru)}</span><span class="round-today ${scoreClass(p.today)}${isHot ? ' hot-round' : ''}">${esc(p.today)}</span></td>` +
       `<td class="win-pct-cell">${winDisplay}</td>` +
-      `<td class="ownership-cell">${ownDisplay}</td>` +
       `<td class="money-cell">${formatMoney(p.earnings)}</td>`;
     tbody.appendChild(tr);
 
@@ -468,7 +502,7 @@ function renderMastersTable(players) {
       const sgRow = document.createElement('tr');
       sgRow.className = 'sg-row';
       sgRow.id = rowId;
-      sgRow.innerHTML = `<td colspan="8"><div class="sg-grid">${
+      sgRow.innerHTML = `<td colspan="6"><div class="sg-grid">${
         sgKeys.map((k, j) =>
           `<div class="sg-cell" style="background:${sgBg(p.sg[k])}">` +
           `<div class="sg-cell-label">${sgLabels[j]}</div>` +
@@ -500,16 +534,16 @@ function buildSummaryTable(selectedNames) {
   const selected = allEntries.filter(e => selectedNames.includes(e.name));
   const table = document.createElement('table');
   const thead = document.createElement('thead');
-  thead.innerHTML = '<tr><th></th><th>Pos</th><th>Team</th><th style="text-align:right">Total</th></tr>';
+  thead.innerHTML = '<tr><th style="width:44px">Pos</th><th>Team</th><th style="text-align:right">Total</th></tr>';
   table.appendChild(thead);
   const tbody = document.createElement('tbody');
   selected.forEach(entry => {
     const tr = document.createElement('tr');
     tr.dataset.teamName = entry.name;
+    tr.dataset.expanded = 'false';
     tr.innerHTML =
-      `<td><button class="team-expand-btn" aria-label="Toggle golfers" data-expanded="false">▶</button></td>` +
-      `<td>${esc(String(entry.rank))}</td>` +
-      `<td>${esc(entry.name)}</td>` +
+      `<td style="font-family:'DM Mono',monospace;font-weight:600;font-size:15px">${esc(String(entry.rank))}</td>` +
+      `<td><div class="team-row-inner"><span class="team-name">${esc(entry.name)}</span><span class="team-expand-chevron">▸</span></div></td>` +
       `<td class="money-cell">${formatMoney(entry.totalEarnings)}</td>`;
     tbody.appendChild(tr);
 
@@ -517,7 +551,7 @@ function buildSummaryTable(selectedNames) {
     detailTr.classList.add('team-detail-row');
     detailTr.style.display = 'none';
     const detailTd = document.createElement('td');
-    detailTd.colSpan = 4;
+    detailTd.colSpan = 3;
     const golferRows = (entry.golfers || []).map(g => {
       const inactive = g.status && g.status !== 'active';
       const dropped  = !!g.dropped;
@@ -539,10 +573,11 @@ function buildSummaryTable(selectedNames) {
     detailTr.appendChild(detailTd);
     tbody.appendChild(detailTr);
 
-    tr.querySelector('.team-expand-btn').addEventListener('click', function () {
+    tr.addEventListener('click', function () {
       const expanded = this.dataset.expanded === 'true';
       this.dataset.expanded = String(!expanded);
-      this.textContent = expanded ? '▶' : '▼';
+      const chevron = this.querySelector('.team-expand-chevron');
+      if (chevron) chevron.classList.toggle('open', !expanded);
       detailTr.style.display = expanded ? 'none' : '';
     });
   });
@@ -640,8 +675,8 @@ function applyPoolFlash(changed) {
   document.querySelectorAll('#ourLeaderboard tbody tr[data-team-name]').forEach(tr => {
     const fields = changed.get(tr.dataset.teamName);
     if (!fields) return;
-    if (fields.has('rank'))     flashCell(tr.cells[1]); // col 0 = expand btn
-    if (fields.has('earnings')) flashCell(tr.cells[3]);
+    if (fields.has('rank'))     flashCell(tr.cells[0]);
+    if (fields.has('earnings')) flashCell(tr.cells[2]);
   });
 }
 
@@ -652,8 +687,8 @@ function applyMastersFlash(changed) {
     if (fields.has('pos'))      flashCell(tr.cells[0]);
     if (fields.has('score'))    flashCell(tr.cells[2]);
     if (fields.has('thru'))     flashCell(tr.cells[3]);
-    if (fields.has('today'))    flashCell(tr.cells[4]);
-    if (fields.has('earnings')) flashCell(tr.cells[7]); // col 7 with Win% + Pool added
+    if (fields.has('today'))    flashCell(tr.cells[3]);
+    if (fields.has('earnings')) flashCell(tr.cells[5]);
   });
 }
 
@@ -682,7 +717,7 @@ function loadData() {
         const t1 = document.getElementById('ourLeaderboard');
         const t2 = document.getElementById('mastersLeaderboard');
         if (t1) t1.innerHTML = `<tbody><tr><td colspan="4" ${msg}>Tournament not yet underway — check back in April!</td></tr></tbody>`;
-        if (t2) t2.innerHTML = `<tbody><tr><td colspan="8" ${msg}>Tournament not yet underway — check back in April!</td></tr></tbody>`;
+        if (t2) t2.innerHTML = `<tbody><tr><td colspan="6" ${msg}>Tournament not yet underway — check back in April!</td></tr></tbody>`;
         return;
       }
       if (data.lastUpdated) {
@@ -716,8 +751,8 @@ function loadData() {
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 initMastersCollapsible();
-renderSkeleton('ourLeaderboard', 4);
-renderSkeleton('mastersLeaderboard', 8);
+renderSkeleton('ourLeaderboard', 3);
+renderSkeleton('mastersLeaderboard', 6);
 loadData();
 setInterval(loadData, 60000);
 </script>
