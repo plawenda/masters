@@ -171,10 +171,15 @@ async function fetchPoolEntries() {
     .map(row => {
       const name    = (row[4] || row[3] || '').trim(); // Teamname (col E) else Name (col D)
       const picksRaw = row[6] || '';
-      // Parse "Golfer Name ($X.XX), ..." → ["Golfer Name", ...]
+      // Parse "Golfer Name ($X.XX), ..." → [{ name, cost }, ...]
       const golfers = picksRaw
         .split(',')
-        .map(s => s.replace(/\s*\(\$?[\d.]+\)\s*$/, '').trim())
+        .map(s => {
+          const costMatch = s.match(/\(\$?([\d.]+)\)\s*$/);
+          const cost = costMatch ? parseFloat(costMatch[1]) : 0;
+          const golferName = s.replace(/\s*\(\$?[\d.]+\)\s*$/, '').trim();
+          return golferName ? { name: golferName, cost } : null;
+        })
         .filter(Boolean);
       return { name, golfers };
     })
@@ -198,6 +203,29 @@ async function fetchPayoutTable() {
     if (!isNaN(pos) && !isNaN(amount)) map[pos] = Math.round(amount);
   }
   return map;
+}
+
+// ---------- Budget compliance ----------
+
+const BUDGET = 30;
+
+// Marks the cheapest golfers as dropped until the team cost is within budget.
+// Mutates each entry's golfers array in place (adds dropped: true).
+function applyBudgetCompliance(entries) {
+  for (const entry of entries) {
+    const totalCost = entry.golfers.reduce((sum, g) => sum + (g.cost || 0), 0);
+    if (totalCost <= BUDGET) continue;
+
+    // Sort ascending by cost so we drop cheapest first; keep original order intact via index
+    const sorted = [...entry.golfers].sort((a, b) => a.cost - b.cost);
+    let remaining = totalCost;
+    for (const g of sorted) {
+      if (remaining <= BUDGET) break;
+      g.dropped = true;
+      remaining -= g.cost || 0;
+    }
+  }
+  return entries;
 }
 
 // ---------- Calculation ----------
@@ -242,16 +270,19 @@ function computeStandings(entries, players, earningsMap) {
 
   const teams = entries.map(entry => {
     let totalEarnings = 0;
-    const golferDetails = entry.golfers.map(name => {
+    const golferDetails = entry.golfers.map(g => {
+      const name     = g.name;
+      const dropped  = !!g.dropped;
       const key      = normalizeName(name);
       const player   = playerMap[key];
-      const earnings = earningsMap[key] ?? 0;
+      const earnings = dropped ? 0 : (earningsMap[key] ?? 0);
       const posRaw   = player ? playerPosition(player) : null;
       const posStr   = posRaw ? posRaw.toString().toUpperCase().trim() : '';
       const inactive = isInactive(posStr);
       totalEarnings += earnings;
       return {
         name,
+        dropped,
         position: player ? (posRaw ?? '-') : '?',
         score:    player ? fmtScore(playerTotal(player)) : '-',
         today:    player ? fmtScore(playerToday(player)) : '-',
@@ -359,6 +390,7 @@ module.exports = {
   WORKER_BACKUP_URL,
   TEAMS_TSV_URL,
   PURSE,
+  BUDGET,
   normalizeName,
   canonicalizeName,
   displayName,
@@ -370,6 +402,7 @@ module.exports = {
   fetchPayoutTable,
   fetchSGStats,
   fetchInPlayPreds,
+  applyBudgetCompliance,
   buildEarningsMap,
   computeStandings,
   buildMastersLeaderboard,

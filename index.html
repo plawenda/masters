@@ -177,6 +177,16 @@
       color: var(--green) !important;
       text-align: right;
     }
+    .detail-inner-table .td-dropped {
+      opacity: 0.45;
+      font-style: italic;
+      text-decoration: line-through;
+    }
+    .detail-inner-table .td-dropped .td-earnings,
+    .detail-inner-table tr.td-dropped td.td-earnings {
+      color: var(--text-muted) !important;
+      font-weight: 400 !important;
+    }
   </style>
 </head>
 <body>
@@ -295,13 +305,15 @@ function renderPoolTable(entries) {
     detailTd.className = 'team-detail-td';
     const golferRows = (entry.golfers || []).map(g => {
       const inactive = g.status && g.status !== 'active';
-      const earnStr = g.earnings > 0 ? formatMoney(g.earnings) : '—';
-      return `<tr${inactive ? ' class="td-inactive"' : ''}>` +
+      const dropped  = !!g.dropped;
+      const earnStr  = g.earnings > 0 ? formatMoney(g.earnings) : '—';
+      const rowClass = dropped ? 'td-dropped' : (inactive ? 'td-inactive' : '');
+      return `<tr${rowClass ? ` class="${rowClass}"` : ''}>` +
         `<td class="td-pos">${esc(String(g.position))}</td>` +
         `<td>${esc(g.name)}</td>` +
         `<td class="td-score ${scoreClass(g.score)}">${esc(g.score)}</td>` +
         `<td class="td-today ${scoreClass(g.today)}">${esc(g.today)}</td>` +
-        `<td class="td-earnings">${earnStr}</td>` +
+        `<td class="td-earnings">${dropped ? '—' : earnStr}</td>` +
         `</tr>`;
     }).join('');
     detailTd.innerHTML =
@@ -506,13 +518,15 @@ function buildSummaryTable(selectedNames) {
     detailTd.colSpan = 4;
     const golferRows = (entry.golfers || []).map(g => {
       const inactive = g.status && g.status !== 'active';
-      const earnStr = g.earnings > 0 ? formatMoney(g.earnings) : '—';
-      return `<tr${inactive ? ' class="td-inactive"' : ''}>` +
+      const dropped  = !!g.dropped;
+      const earnStr  = g.earnings > 0 ? formatMoney(g.earnings) : '—';
+      const rowClass = dropped ? 'td-dropped' : (inactive ? 'td-inactive' : '');
+      return `<tr${rowClass ? ` class="${rowClass}"` : ''}>` +
         `<td class="td-pos">${esc(String(g.position))}</td>` +
         `<td>${esc(g.name)}</td>` +
         `<td class="td-score ${scoreClass(g.score)}">${esc(g.score)}</td>` +
         `<td class="td-today ${scoreClass(g.today)}">${esc(g.today)}</td>` +
-        `<td class="td-earnings">${earnStr}</td>` +
+        `<td class="td-earnings">${dropped ? '—' : earnStr}</td>` +
         `</tr>`;
     }).join('');
     detailTd.innerHTML =

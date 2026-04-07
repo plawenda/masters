@@ -2,7 +2,7 @@
 
 const { getStore }           = require('@netlify/blobs');
 const { fetchLiveScores, fetchPoolEntries, fetchPayoutTable, fetchSGStats, fetchInPlayPreds,
-        buildEarningsMap, computeStandings, buildMastersLeaderboard, normalizeName } = require('./lib/pool-calc');
+        applyBudgetCompliance, buildEarningsMap, computeStandings, buildMastersLeaderboard, normalizeName } = require('./lib/pool-calc');
 
 const ALLOWED_ORIGIN = process.env.URL || 'https://masters-pool.org';
 const CORS_HEADERS = {
@@ -92,11 +92,14 @@ exports.handler = async () => {
       fetchInPlayPreds().catch(e => { console.warn('In-play preds failed:', e.message); return {}; }),
     ]);
 
-    // Golfer ownership: how many pool teams selected each player
+    // Apply budget compliance — marks over-budget teams' cheapest golfers as dropped
+    applyBudgetCompliance(entries);
+
+    // Golfer ownership: how many pool teams selected each player (dropped still count for ownership)
     const ownershipMap = {};
     for (const entry of entries) {
-      for (const golferName of entry.golfers) {
-        const key = normalizeName(golferName);
+      for (const g of entry.golfers) {
+        const key = normalizeName(g.name);
         ownershipMap[key] = (ownershipMap[key] || 0) + 1;
       }
     }
