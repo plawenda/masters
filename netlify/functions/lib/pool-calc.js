@@ -174,7 +174,7 @@ async function fetchPoolEntries() {
       // Parse "Golfer Name ($X.XX), ..." → ["Golfer Name", ...]
       const golfers = picksRaw
         .split(',')
-        .map(s => s.replace(/\s*\(\$[\d.]+\)\s*$/, '').trim())
+        .map(s => s.replace(/\s*\(\$?[\d.]+\)\s*$/, '').trim())
         .filter(Boolean);
       return { name, golfers };
     })
