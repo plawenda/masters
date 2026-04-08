@@ -424,7 +424,7 @@ function renderShowMore(entries) {
     });
   });
   const poolCard = document.querySelector('.leaderboard-box:first-child .card');
-  if (poolCard) poolCard.insertAdjacentElement('afterend', btn);
+  if (poolCard) poolCard.appendChild(btn);
 }
 
 function reApplyExpanded() {
