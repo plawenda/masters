@@ -251,11 +251,6 @@
   <a href="rules.html">Rules</a>
 </nav>
 
-<div id="dispatchStrip" class="dispatch-strip">
-  <span class="dispatch-icon" aria-hidden="true">⛳</span>
-  <span id="dispatchText"><span class="skel" style="width:340px;max-width:70vw"></span></span>
-</div>
-
 <div id="errorBanner" class="error-banner" style="display:none">
   <span id="errorMsg">Failed to load leaderboard data.</span>
   <button class="error-retry-btn" onclick="loadData()">↻ Retry</button>
@@ -632,6 +627,7 @@ function buildSummaryTable(selectedNames) {
 
     // team-link: scroll to + expand the matching row in the main leaderboard
     tr.querySelector('.team-link').addEventListener('click', function(e) {
+      e.preventDefault();
       e.stopPropagation();
       const target = document.querySelector(`#ourLeaderboard tbody tr[data-team-name="${CSS.escape(entry.name)}"]`);
       if (!target) return;
