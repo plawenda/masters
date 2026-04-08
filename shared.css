@@ -12,7 +12,82 @@
   --text: #1a1510;
   --text-muted: #6b6255;
   --highlight: rgba(0,103,71,0.06);
+  --thead-bg: #004232;
+  --error-bg: #fee2e2;
+  --error-text: #991b1b;
+  --error-border: #fca5a5;
 }
+
+/* ── Dark mode ─────────────────────────────────────────────────────────────── */
+/* System preference (no JS toggle yet) */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111a15;
+    --surface: #1a2b1f;
+    --surface2: #22352a;
+    --border: #2e4438;
+    --text: #e4ede7;
+    --text-muted: #8aaa97;
+    --highlight: rgba(0,103,71,0.18);
+    --green-dim: rgba(0,103,71,0.2);
+    --green-mid: rgba(0,103,71,0.25);
+    --gold-dim: rgba(200,149,42,0.15);
+    --thead-bg: #0d2218;
+    --error-bg: #3b1a1a;
+    --error-text: #fca5a5;
+    --error-border: #7f1d1d;
+  }
+}
+/* JS-controlled toggle */
+[data-theme="dark"] {
+  --bg: #111a15;
+  --surface: #1a2b1f;
+  --surface2: #22352a;
+  --border: #2e4438;
+  --text: #e4ede7;
+  --text-muted: #8aaa97;
+  --highlight: rgba(0,103,71,0.18);
+  --green-dim: rgba(0,103,71,0.2);
+  --green-mid: rgba(0,103,71,0.25);
+  --gold-dim: rgba(200,149,42,0.15);
+  --thead-bg: #0d2218;
+  --error-bg: #3b1a1a;
+  --error-text: #fca5a5;
+  --error-border: #7f1d1d;
+}
+
+/* Dark mode: override hardcoded colors that don't use CSS vars */
+[data-theme="dark"] thead th { background: var(--thead-bg); }
+[data-theme="dark"] .sg-row { background: var(--surface2); }
+[data-theme="dark"] .golfer-detail-row td { background: rgba(0,103,71,0.1); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) thead th { background: var(--thead-bg); }
+  :root:not([data-theme="light"]) .sg-row { background: var(--surface2); }
+  :root:not([data-theme="light"]) .golfer-detail-row td { background: rgba(0,103,71,0.1); }
+}
+
+/* Dark mode toggle button */
+.theme-toggle {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 20px;
+  color: rgba(255,255,255,0.75);
+  font-size: 14px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  transition: background 0.2s, color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.theme-toggle:hover { background: rgba(255,255,255,0.22); color: #fff; }
 * { box-sizing: border-box; }
 body {
   font-family: 'DM Sans', sans-serif;
@@ -120,6 +195,10 @@ nav a.active { color: var(--green); border-bottom-color: var(--green); }
   nav a { display: none; }
   nav.open a { display: flex; padding: 13px 20px; font-size: 15px; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); border-left: none; width: 100%; }
   nav.open a.active { border-left: 3px solid var(--green); padding-left: 17px; }
+  /* Hide score + trend columns on mobile; show move badge + hot inline in team cell */
+  .col-score, .col-trend { display: none; }
+  .mobile-move, .mobile-hot { display: inline; }
+  .dispatch-strip { font-size: 13px; padding: 8px 14px; }
 }
 
 /* ── Cards ─────────────────────────────────────────────────────────────────── */
@@ -213,6 +292,24 @@ tbody tr.highlight td:first-child { border-left: 3px solid var(--green); padding
 .today-cell { white-space: nowrap; text-align: center; min-width: 44px; }
 .money-cell { font-family: 'DM Mono', monospace; font-variant-numeric: tabular-nums; text-align: right; }
 .peak-badge { color: var(--gold); font-size: 10px; margin-left: 4px; vertical-align: middle; cursor: default; }
+/* Hidden on desktop, shown by mobile media query */
+.mobile-move { display: none; }
+.mobile-hot  { display: none; }
+
+.hot-badge {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 4px;
+  background: #dc2626;
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  font-style: normal;
+  letter-spacing: 0.5px;
+  border-radius: 3px;
+  vertical-align: middle;
+}
 
 /* ── Skeleton loader ─────────────────────────────────────────────────────────── */
 .skel {
@@ -278,6 +375,70 @@ tbody tr.is-leader:hover { background: rgba(184,151,46,0.2) !important; }
   transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 .show-more-btn:hover { background: var(--green-dim); color: var(--green); border-color: var(--green); }
+
+/* ── Error banner ─────────────────────────────────────────────────────────────── */
+.error-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: var(--error-bg);
+  color: var(--error-text);
+  border-bottom: 1px solid var(--error-border);
+  padding: 10px 20px;
+  font-size: 14px;
+  font-family: 'DM Sans', sans-serif;
+}
+.error-retry-btn {
+  background: #dc2626;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.error-retry-btn:hover { background: #b91c1c; }
+
+/* ── Refresh button ───────────────────────────────────────────────────────────── */
+.refresh-now-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 15px;
+  cursor: pointer;
+  padding: 0 2px;
+  margin-left: 4px;
+  vertical-align: middle;
+  transition: color 0.15s, transform 0.3s;
+  line-height: 1;
+}
+.refresh-now-btn:hover { color: var(--green); }
+@keyframes spin { to { transform: rotate(360deg); } }
+.refresh-now-btn.spinning { animation: spin 0.7s linear infinite; }
+
+/* ── AI Dispatch strip ───────────────────────────────────────────────────────── */
+.dispatch-strip {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  border-left: 4px solid var(--gold);
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 42px;
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--text-muted);
+  text-align: center;
+}
+.dispatch-icon { font-style: normal; flex-shrink: 0; }
+#dispatchText { flex: 1; max-width: 780px; line-height: 1.5; }
 
 /* ── Team selector ───────────────────────────────────────────────────────────── */
 .selector-card {

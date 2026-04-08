@@ -15,6 +15,18 @@
       if (!navEl.contains(e.target) && e.target !== menuBtn) navEl.classList.remove('open');
     });
   }
+
+  // AI dispatch caddie strip
+  const dispatchEl = document.getElementById('dispatchText');
+  if (dispatchEl) {
+    fetch('/api/intro')
+      .then(r => r.json())
+      .then(d => { if (d.intro) dispatchEl.textContent = d.intro; })
+      .catch(() => { dispatchEl.textContent = 'Follow along as the drama unfolds at Augusta National.'; });
+  }
+
+  // Dark mode init
+  initDarkMode();
 })();
 
 // ── Utility functions ─────────────────────────────────────────────────────────
@@ -50,6 +62,45 @@ function renderSparkline(history, currentRank) {
     `<polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.75"/>` +
     `<circle cx="${lx}" cy="${ly}" r="2" fill="${color}"/>` +
     `</svg>`;
+}
+
+// ── Dark mode ─────────────────────────────────────────────────────────────────
+
+function initDarkMode() {
+  const saved = localStorage.getItem('theme');
+  if (saved) document.documentElement.setAttribute('data-theme', saved);
+
+  function isDark() {
+    const attr = document.documentElement.getAttribute('data-theme');
+    if (attr === 'dark') return true;
+    if (attr === 'light') return false;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+
+  function updateToggle() {
+    const dark = isDark();
+    const icon  = document.getElementById('themeIcon');
+    const label = document.getElementById('themeLabel');
+    if (icon)  icon.textContent  = dark ? '☽' : '☀';
+    if (label) label.textContent = dark ? 'Dark' : 'Light';
+  }
+
+  updateToggle();
+
+  const btn = document.getElementById('themeToggle');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      const newTheme = isDark() ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      updateToggle();
+    });
+  }
+
+  // Respond to system preference changes (when no manual override)
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if (!localStorage.getItem('theme')) updateToggle();
+  });
 }
 
 function moveBadge(delta) {

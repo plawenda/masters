@@ -231,10 +231,13 @@
 </head>
 <body>
 
-<header>
+<header style="position:relative">
   <img class="logo" src="masters_pool_logo.png" alt="Masters Pool Logo" />
   <div class="site-title">Masters Pool</div>
   <div class="site-subtitle">Augusta National · <span id="year"></span></div>
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+    <span id="themeIcon">☀</span> <span id="themeLabel">Light</span>
+  </button>
 </header>
 
 <nav>
@@ -247,13 +250,25 @@
   <a href="rules.html">Rules</a>
 </nav>
 
+<div id="dispatchStrip" class="dispatch-strip">
+  <span class="dispatch-icon" aria-hidden="true">⛳</span>
+  <span id="dispatchText"><span class="skel" style="width:340px;max-width:70vw"></span></span>
+</div>
+
 <div class="welcome-strip">
   Welcome to the 16th Annual Masters Pool. I hope it adds a little something extra to your enjoyment of the greatest tournament in golf.
+</div>
+
+<div id="errorBanner" class="error-banner" style="display:none">
+  <span id="errorMsg">Failed to load leaderboard data.</span>
+  <button class="error-retry-btn" onclick="loadData()">↻ Retry</button>
 </div>
 
 <div class="container">
   <div class="info-bar">
     <span id="lastUpdatedBar" class="update-time"></span>
+    <span id="refreshCountdown" class="update-time" style="margin-left:10px"></span>
+    <button id="refreshNowBtn" class="refresh-now-btn" title="Refresh now" onclick="loadData()">↻</button>
   </div>
 
   <div class="selector-card">
@@ -338,7 +353,7 @@ function renderPoolTable(entries) {
   const table = document.getElementById('ourLeaderboard');
   table.innerHTML = '';
   const thead = document.createElement('thead');
-  thead.innerHTML = '<tr><th style="width:44px">Pos</th><th>Team</th><th style="text-align:center;width:54px">Score</th><th style="text-align:center;width:54px">Today</th><th style="text-align:right">Total</th></tr>';
+  thead.innerHTML = '<tr><th style="width:44px">Pos</th><th>Team</th><th class="col-score" style="text-align:center;width:54px">Score</th><th style="text-align:center;width:54px">Today</th><th class="col-trend" style="text-align:center;width:80px">Trend</th><th style="text-align:right">Total</th></tr>';
   table.appendChild(thead);
   const tbody = document.createElement('tbody');
   const visible = entries.slice(0, visibleCount);
@@ -357,11 +372,19 @@ function renderPoolTable(entries) {
     const teamTodayVal = sumScore(entry.golfers || [], 'today');
     const teamScoreStr = fmtTeamScore(teamScoreVal);
     const teamTodayStr = fmtTeamScore(teamTodayVal);
+    const sparkHtml = renderSparkline(entry.history || [], entry.rank);
+    const moveHtml  = moveBadge(entry.dailyMove || 0);
+    const trendHtml = sparkHtml
+      ? `<div style="display:flex;flex-direction:column;align-items:center;gap:1px">${sparkHtml}<span style="font-size:10px;line-height:1">${moveHtml}</span></div>`
+      : (moveHtml !== '—' ? moveHtml : '—');
+    const isHotTeam = teamTodayVal !== null && teamTodayVal <= -3;
+    const hotBadge  = isHotTeam ? `<span class="hot-badge" title="Team is on fire today">HOT</span>` : '';
     tr.innerHTML =
       `<td style="font-family:'DM Mono',monospace;font-weight:600;font-size:15px">${esc(rankDisplay)}</td>` +
-      `<td><div class="team-row-inner"><span class="team-expand-chevron">▸</span><span class="team-name">${esc(entry.name)}${peakStar}</span></div></td>` +
-      `<td class="${scoreClass(teamScoreStr)}" style="text-align:center;font-family:'DM Mono',monospace;font-weight:600">${esc(teamScoreStr)}</td>` +
-      `<td class="${scoreClass(teamTodayStr)}" style="text-align:center;font-family:'DM Mono',monospace">${esc(teamTodayStr)}</td>` +
+      `<td><div class="team-row-inner"><span class="team-expand-chevron">▸</span><span class="team-name">${esc(entry.name)}${peakStar}</span><span class="mobile-move">${moveHtml !== '—' ? moveHtml : ''}</span>${hotBadge ? `<span class="mobile-hot">${hotBadge}</span>` : ''}</div></td>` +
+      `<td class="col-score ${scoreClass(teamScoreStr)}" style="text-align:center;font-family:'DM Mono',monospace;font-weight:600">${esc(teamScoreStr)}</td>` +
+      `<td class="${scoreClass(teamTodayStr)}" style="text-align:center;font-family:'DM Mono',monospace">${esc(teamTodayStr)}${hotBadge}</td>` +
+      `<td class="col-trend spark-cell">${trendHtml}</td>` +
       `<td class="money-cell">${formatMoney(entry.totalEarnings)}</td>`;
     tbody.appendChild(tr);
 
@@ -369,7 +392,7 @@ function renderPoolTable(entries) {
     detailTr.classList.add('team-detail-row');
     detailTr.style.display = 'none';
     const detailTd = document.createElement('td');
-    detailTd.colSpan = 5;
+    detailTd.colSpan = 6;
     detailTd.className = 'team-detail-td';
     const golferRows = (entry.golfers || []).map(g => {
       const inactive = g.status && g.status !== 'active';
@@ -743,7 +766,7 @@ function applyPoolFlash(changed) {
     const fields = changed.get(tr.dataset.teamName);
     if (!fields) return;
     if (fields.has('rank'))     flashCell(tr.cells[0]);
-    if (fields.has('earnings')) flashCell(tr.cells[4]);
+    if (fields.has('earnings')) flashCell(tr.cells[5]); // cells[4] is now Trend
   });
 }
 
@@ -772,18 +795,49 @@ function initMastersCollapsible() {
   });
 }
 
+// ── Error banner ──────────────────────────────────────────────────────────────
+function showError(msg) {
+  const banner = document.getElementById('errorBanner');
+  const msgEl  = document.getElementById('errorMsg');
+  if (banner) banner.style.display = 'flex';
+  if (msgEl && msg) msgEl.textContent = msg;
+}
+function hideError() {
+  const banner = document.getElementById('errorBanner');
+  if (banner) banner.style.display = 'none';
+}
+
+// ── Refresh countdown ─────────────────────────────────────────────────────────
+let nextRefreshAt = 0;
+let countdownInterval = null;
+
+function startCountdown() {
+  nextRefreshAt = Date.now() + 60000;
+  if (countdownInterval) clearInterval(countdownInterval);
+  countdownInterval = setInterval(() => {
+    const secs = Math.max(0, Math.round((nextRefreshAt - Date.now()) / 1000));
+    const el = document.getElementById('refreshCountdown');
+    if (el) el.textContent = secs > 0 ? `· ${secs}s` : '';
+  }, 1000);
+}
+
 // ── Main data load (polling) ──────────────────────────────────────────────────
 let choicesInitialized = false;
 
 function loadData() {
+  const btn = document.getElementById('refreshNowBtn');
+  if (btn) btn.classList.add('spinning');
   fetch('/api/leaderboard')
     .then(r => r.json())
     .then(data => {
+      hideError();
+      if (btn) btn.classList.remove('spinning');
+      startCountdown();
       if (data.status === 'no_tournament') {
         const msg = 'style="text-align:center;padding:32px;color:var(--text-muted)"';
         const t1 = document.getElementById('ourLeaderboard');
         const t2 = document.getElementById('mastersLeaderboard');
-        if (t1) t1.innerHTML = `<tbody><tr><td colspan="5" ${msg}>Tournament not yet underway — check back in April!</td></tr></tbody>`;
+        if (t1) t1.innerHTML = `<tbody><tr><td colspan="6" ${msg}>Tournament not yet underway — check back in April!</td></tr></tbody>`;
         if (t2) t2.innerHTML = `<tbody><tr><td colspan="6" ${msg}>Tournament not yet underway — check back in April!</td></tr></tbody>`;
         return;
       }
@@ -817,13 +871,18 @@ function loadData() {
         buildSummaryTable(savedNames);
       }
     })
-    .catch(err => console.error('Leaderboard load failed:', err));
+    .catch(err => {
+      if (btn) btn.classList.remove('spinning');
+      startCountdown();
+      showError('Failed to load leaderboard data.');
+      console.error('Leaderboard load failed:', err);
+    });
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 initMastersCollapsible();
-renderSkeleton('ourLeaderboard', 5);
+renderSkeleton('ourLeaderboard', 6);
 renderSkeleton('mastersLeaderboard', 6);
 loadData();
 setInterval(loadData, 60000);
