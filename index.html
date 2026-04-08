@@ -423,7 +423,7 @@ function renderShowMore(entries) {
       tr.classList.toggle('highlight', savedNames.includes(tr.dataset.teamName));
     });
   });
-  const poolCard = document.querySelector('.leaderboard-box:first-child .card');
+  const poolCard = document.querySelector('.leaderboard-box:first-child > .card');
   if (poolCard) poolCard.appendChild(btn);
 }
 
