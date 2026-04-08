@@ -15,20 +15,6 @@
     html { overflow-x: hidden; }
     #poolTableWrap { overflow-x: auto; }
 
-    /* ── Welcome banner ── */
-    .welcome-strip {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      border-top: 3px solid var(--gold);
-      text-align: center;
-      padding: 12px 24px;
-      font-family: 'Playfair Display', serif;
-      font-style: italic;
-      font-size: 15px;
-      color: var(--text-muted);
-    }
-    .welcome-strip strong { color: var(--green); font-style: normal; font-weight: 600; }
-
     .info-bar {
       font-size: 14px;
       color: var(--text-muted);
@@ -134,6 +120,8 @@
       gap: 8px;
     }
     .team-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .team-link { color: inherit; text-decoration: none; }
+    .team-link:hover { color: var(--green); text-decoration: underline; text-underline-offset: 2px; }
     .team-expand-chevron {
       font-size: 9px;
       color: var(--text-muted);
@@ -266,10 +254,6 @@
 <div id="dispatchStrip" class="dispatch-strip">
   <span class="dispatch-icon" aria-hidden="true">⛳</span>
   <span id="dispatchText"><span class="skel" style="width:340px;max-width:70vw"></span></span>
-</div>
-
-<div class="welcome-strip">
-  Welcome to the 16th Annual Masters Pool. I hope it adds a little something extra to your enjoyment of the greatest tournament in golf.
 </div>
 
 <div id="errorBanner" class="error-banner" style="display:none">
@@ -640,11 +624,20 @@ function buildSummaryTable(selectedNames) {
     const teamTodayStr = fmtTeamScore(teamTodayVal);
     tr.innerHTML =
       `<td style="font-family:'DM Mono',monospace;font-weight:600;font-size:15px">${esc(rankDisplay)}</td>` +
-      `<td><div class="team-row-inner"><span class="team-expand-chevron">▸</span><span class="team-name">${esc(entry.name)}</span></div></td>` +
+      `<td><div class="team-row-inner"><span class="team-expand-chevron">▸</span><span class="team-name"><a class="team-link" href="#leaderboard-team-${esc(entry.name.replace(/\s+/g,'-'))}">${esc(entry.name)}</a></span></div></td>` +
       `<td class="${scoreClass(teamScoreStr)}" style="text-align:center;font-family:'DM Mono',monospace;font-weight:600">${esc(teamScoreStr)}</td>` +
       `<td class="${scoreClass(teamTodayStr)}" style="text-align:center;font-family:'DM Mono',monospace">${esc(teamTodayStr)}</td>` +
       `<td class="money-cell">${formatMoney(entry.totalEarnings)}</td>`;
     tbody.appendChild(tr);
+
+    // team-link: scroll to + expand the matching row in the main leaderboard
+    tr.querySelector('.team-link').addEventListener('click', function(e) {
+      e.stopPropagation();
+      const target = document.querySelector(`#ourLeaderboard tbody tr[data-team-name="${CSS.escape(entry.name)}"]`);
+      if (!target) return;
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (target.dataset.expanded !== 'true') target.click();
+    });
 
     const detailTr = document.createElement('tr');
     detailTr.classList.add('team-detail-row');
