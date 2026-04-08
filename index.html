@@ -342,12 +342,15 @@ function renderPoolTable(entries) {
   table.appendChild(thead);
   const tbody = document.createElement('tbody');
   const visible = entries.slice(0, visibleCount);
+  const rankCounts = {};
+  entries.forEach(e => { rankCounts[e.rank] = (rankCounts[e.rank] || 0) + 1; });
 
   visible.forEach(entry => {
     const tr = document.createElement('tr');
     tr.dataset.teamName = entry.name;
     tr.dataset.expanded = 'false';
     if (entry.rank === 1) tr.classList.add('is-leader');
+    const rankDisplay = rankCounts[entry.rank] > 1 ? `T${entry.rank}` : `${entry.rank}`;
     const peakStar = (entry.peakRank === 1 && entry.rank !== 1)
       ? `<span class="peak-badge" title="Led the pool at some point today">★</span>` : '';
     const teamScoreVal = sumScore(entry.golfers || [], 'score');
@@ -355,7 +358,7 @@ function renderPoolTable(entries) {
     const teamScoreStr = fmtTeamScore(teamScoreVal);
     const teamTodayStr = fmtTeamScore(teamTodayVal);
     tr.innerHTML =
-      `<td style="font-family:'DM Mono',monospace;font-weight:600;font-size:15px">${esc(String(entry.rank))}</td>` +
+      `<td style="font-family:'DM Mono',monospace;font-weight:600;font-size:15px">${esc(rankDisplay)}</td>` +
       `<td><div class="team-row-inner"><span class="team-expand-chevron">▸</span><span class="team-name">${esc(entry.name)}${peakStar}</span></div></td>` +
       `<td class="${scoreClass(teamScoreStr)}" style="text-align:center;font-family:'DM Mono',monospace;font-weight:600">${esc(teamScoreStr)}</td>` +
       `<td class="${scoreClass(teamTodayStr)}" style="text-align:center;font-family:'DM Mono',monospace">${esc(teamTodayStr)}</td>` +
@@ -587,16 +590,19 @@ function buildSummaryTable(selectedNames) {
   thead.innerHTML = '<tr><th style="width:44px">Pos</th><th>Team</th><th style="text-align:center;width:54px">Score</th><th style="text-align:center;width:54px">Today</th><th style="text-align:right">Total</th></tr>';
   table.appendChild(thead);
   const tbody = document.createElement('tbody');
+  const summaryRankCounts = {};
+  allEntries.forEach(e => { summaryRankCounts[e.rank] = (summaryRankCounts[e.rank] || 0) + 1; });
   selected.forEach(entry => {
     const tr = document.createElement('tr');
     tr.dataset.teamName = entry.name;
     tr.dataset.expanded = 'false';
+    const rankDisplay = summaryRankCounts[entry.rank] > 1 ? `T${entry.rank}` : `${entry.rank}`;
     const teamScoreVal = sumScore(entry.golfers || [], 'score');
     const teamTodayVal = sumScore(entry.golfers || [], 'today');
     const teamScoreStr = fmtTeamScore(teamScoreVal);
     const teamTodayStr = fmtTeamScore(teamTodayVal);
     tr.innerHTML =
-      `<td style="font-family:'DM Mono',monospace;font-weight:600;font-size:15px">${esc(String(entry.rank))}</td>` +
+      `<td style="font-family:'DM Mono',monospace;font-weight:600;font-size:15px">${esc(rankDisplay)}</td>` +
       `<td><div class="team-row-inner"><span class="team-expand-chevron">▸</span><span class="team-name">${esc(entry.name)}</span></div></td>` +
       `<td class="${scoreClass(teamScoreStr)}" style="text-align:center;font-family:'DM Mono',monospace;font-weight:600">${esc(teamScoreStr)}</td>` +
       `<td class="${scoreClass(teamTodayStr)}" style="text-align:center;font-family:'DM Mono',monospace">${esc(teamTodayStr)}</td>` +
