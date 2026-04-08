@@ -228,6 +228,84 @@
       color: var(--text-muted) !important;
       font-weight: 400 !important;
     }
+
+    /* ── Insights strip ── */
+    .insights-strip {
+      display: flex;
+      gap: 8px;
+      padding: 8px 20px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .insights-strip::-webkit-scrollbar { display: none; }
+    .insight-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 11px;
+      border-radius: 20px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .insight-chip.ic-up   { background: rgba(21,128,61,0.09);  color: #15803d; border-color: rgba(21,128,61,0.22); }
+    .insight-chip.ic-down { background: rgba(220,38,38,0.09);  color: #dc2626; border-color: rgba(220,38,38,0.22); }
+    .insight-chip.ic-fire { background: rgba(234,88,12,0.09);  color: #c2410c; border-color: rgba(234,88,12,0.22); }
+    .insight-chip.ic-gold { background: var(--gold-dim); color: var(--gold); border-color: rgba(200,149,42,0.3); }
+    .insight-chip.ic-risk { background: rgba(180,40,40,0.09);  color: #9a3412; border-color: rgba(180,40,40,0.22); }
+    .insight-chip strong  { font-weight: 700; }
+
+    /* ── Rewind scrubber ── */
+    .rewind-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 8px 14px;
+      margin-bottom: 14px;
+    }
+    .rewind-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+      min-width: 80px;
+      flex-shrink: 0;
+    }
+    .rewind-slider {
+      flex: 1;
+      accent-color: var(--green);
+      cursor: pointer;
+      min-width: 80px;
+    }
+    .rewind-live-btn {
+      padding: 3px 10px;
+      border: 1px solid var(--green);
+      border-radius: 12px;
+      background: none;
+      color: var(--green);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .rewind-live-btn:hover { background: var(--green-dim); }
+    @media (max-width: 480px) { .rewind-wrap { gap: 8px; padding: 7px 10px; } }
   </style>
 </head>
 <body>
@@ -251,12 +329,23 @@
   <a href="rules.html">Rules</a>
 </nav>
 
+<div class="dispatch-strip">
+  <span class="dispatch-icon">⛳</span>
+  <span id="dispatchText">Checking in from Augusta…</span>
+</div>
+<div id="insightsStrip" class="insights-strip" style="display:none"></div>
+
 <div id="errorBanner" class="error-banner" style="display:none">
   <span id="errorMsg">Failed to load leaderboard data.</span>
   <button class="error-retry-btn" onclick="loadData()">↻ Retry</button>
 </div>
 
 <div class="container">
+  <div id="rewindWrap" class="rewind-wrap" style="display:none">
+    <div class="rewind-label"><span>⏱</span><span id="rewindTimeLabel">● Live</span></div>
+    <input type="range" id="rewindSlider" class="rewind-slider" min="0" step="1">
+    <button id="rewindLiveBtn" class="rewind-live-btn" style="display:none">← Live</button>
+  </div>
   <div class="info-bar">
     <span id="lastUpdatedBar" class="update-time"></span>
     <span id="refreshCountdown" class="update-time" style="margin-left:10px"></span>
@@ -340,6 +429,8 @@ function fmtTeamScore(n) {
 // ── Render pool leaderboard (with expandable golfer sub-rows) ─────────────────
 const expandedTeams = new Set();
 let visibleCount = 50;
+let rewindEntries = null;
+let rewindScrubberInitialized = false;
 
 function renderPoolTable(entries) {
   const table = document.getElementById('ourLeaderboard');
@@ -426,6 +517,7 @@ function renderPoolTable(entries) {
 function renderShowMore(entries) {
   const existing = document.getElementById('showMoreWrap');
   if (existing) existing.remove();
+  if (rewindEntries) return; // no pagination in rewind mode
   const remaining = entries.length - visibleCount;
   if (remaining <= 0) return;
 
@@ -848,21 +940,30 @@ function loadData() {
       const masters = data.mastersLeaderboard || [];
       const poolChanges    = diffAndSnapshotPool(pool);
       const mastersChanges = diffAndSnapshotMasters(masters);
-      renderPoolTable(pool);
+      if (!rewindEntries) {
+        renderPoolTable(pool);
+        applyPoolFlash(poolChanges);
+        reApplyExpanded();
+      }
       renderMastersTable(masters);
-      applyPoolFlash(poolChanges);
       applyMastersFlash(mastersChanges);
-      reApplyExpanded();
+      initInsightsStrip(pool, masters);
       const savedNames = JSON.parse(localStorage.getItem('selectedTeamNames') || '[]');
-      document.querySelectorAll('#ourLeaderboard tbody tr[data-team-name]').forEach(tr => {
-        tr.classList.toggle('highlight', savedNames.includes(tr.dataset.teamName));
-      });
+      if (!rewindEntries) {
+        document.querySelectorAll('#ourLeaderboard tbody tr[data-team-name]').forEach(tr => {
+          tr.classList.toggle('highlight', savedNames.includes(tr.dataset.teamName));
+        });
+      }
       allEntries = pool;
       if (!choicesInitialized) {
         initTeamSelector(pool);
         choicesInitialized = true;
       } else {
         buildSummaryTable(savedNames);
+      }
+      if (!rewindScrubberInitialized) {
+        initRewindScrubber(pool);
+        rewindScrubberInitialized = true;
       }
     })
     .catch(err => {
@@ -871,6 +972,104 @@ function loadData() {
       showError('Failed to load leaderboard data.');
       console.error('Leaderboard load failed:', err);
     });
+}
+
+// ── Insights strip ────────────────────────────────────────────────────────────
+function initInsightsStrip(pool, masters) {
+  const strip = document.getElementById('insightsStrip');
+  if (!strip) return;
+  const parseScore = s => (!s || s === '-' || s === '?' || s === 'E') ? (s === 'E' ? 0 : NaN) : parseInt(s.replace('+',''), 10);
+  const chips = [];
+
+  // Biggest pool rank gainer today
+  const gainer = [...pool].filter(e => e.dailyMove > 0).sort((a, b) => b.dailyMove - a.dailyMove)[0];
+  if (gainer) chips.push(`<span class="insight-chip ic-up">▲${gainer.dailyMove} <strong>${esc(gainer.name)}</strong></span>`);
+
+  // Biggest pool rank loser today
+  const loser = [...pool].filter(e => e.dailyMove < 0).sort((a, b) => a.dailyMove - b.dailyMove)[0];
+  if (loser) chips.push(`<span class="insight-chip ic-down">▼${Math.abs(loser.dailyMove)} <strong>${esc(loser.name)}</strong></span>`);
+
+  // Hottest round: active golfer scoring ≤ -3 today
+  const hotPlayer = [...(masters||[])]
+    .filter(p => p.status === 'active' && !isNaN(parseScore(p.today)))
+    .sort((a, b) => parseScore(a.today) - parseScore(b.today))[0];
+  if (hotPlayer && parseScore(hotPlayer.today) <= -3)
+    chips.push(`<span class="insight-chip ic-fire">🔥 <strong>${esc(hotPlayer.name)}</strong> ${esc(hotPlayer.today)} today</span>`);
+
+  // Popular pick that's missed/WD'd (highest pool ownership among inactive)
+  const atRisk = [...(masters||[])]
+    .filter(p => p.status !== 'active' && p.ownershipCount > 0)
+    .sort((a, b) => (b.ownershipCount||0) - (a.ownershipCount||0))[0];
+  if (atRisk)
+    chips.push(`<span class="insight-chip ic-risk">⚠️ <strong>${esc(atRisk.name)}</strong> ${esc(atRisk.status)} · ${atRisk.ownership}% of pool</span>`);
+
+  // Leading the money on the course
+  const moneyLeader = [...(masters||[])]
+    .filter(p => p.status === 'active' && p.earnings > 0)
+    .sort((a, b) => (b.earnings||0) - (a.earnings||0))[0];
+  if (moneyLeader)
+    chips.push(`<span class="insight-chip ic-gold">💰 <strong>${esc(moneyLeader.name)}</strong> ${formatMoney(moneyLeader.earnings)}</span>`);
+
+  if (!chips.length) { strip.style.display = 'none'; return; }
+  strip.innerHTML = chips.join('');
+  strip.style.display = 'flex';
+}
+
+// ── Rewind scrubber ───────────────────────────────────────────────────────────
+function initRewindScrubber(pool) {
+  // Build unified timeline from all teams' histories
+  const timeSet = new Set();
+  for (const e of pool) for (const h of (e.history || [])) timeSet.add(h.time);
+  const times = [...timeSet].sort();
+  if (times.length < 2) return;
+
+  const rankMaps = times.map(t => {
+    const m = {};
+    for (const e of pool) {
+      const h = (e.history || []).find(x => x.time === t);
+      if (h) m[e.name] = h.rank;
+    }
+    return m;
+  });
+
+  const wrap    = document.getElementById('rewindWrap');
+  const slider  = document.getElementById('rewindSlider');
+  const timeLbl = document.getElementById('rewindTimeLabel');
+  const liveBtn = document.getElementById('rewindLiveBtn');
+  if (!wrap || !slider) return;
+
+  wrap.style.display = 'flex';
+  slider.max   = times.length;
+  slider.value = times.length;
+
+  function fmtTime(iso) {
+    try { return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }); }
+    catch(e) { return iso; }
+  }
+
+  function applyRewind(idx) {
+    const isLive = idx >= times.length;
+    timeLbl.textContent   = isLive ? '● Live' : fmtTime(times[idx]);
+    liveBtn.style.display = isLive ? 'none' : '';
+    if (isLive) {
+      rewindEntries = null;
+      renderPoolTable(allEntries);
+      reApplyExpanded();
+      const saved = JSON.parse(localStorage.getItem('selectedTeamNames') || '[]');
+      document.querySelectorAll('#ourLeaderboard tbody tr[data-team-name]').forEach(tr => {
+        tr.classList.toggle('highlight', saved.includes(tr.dataset.teamName));
+      });
+    } else {
+      const rm = rankMaps[idx];
+      rewindEntries = [...allEntries]
+        .map(e => ({ ...e, rank: rm[e.name] ?? e.rank }))
+        .sort((a, b) => a.rank - b.rank);
+      renderPoolTable(rewindEntries);
+    }
+  }
+
+  slider.addEventListener('input', () => applyRewind(+slider.value));
+  liveBtn.addEventListener('click', () => { slider.value = times.length; applyRewind(times.length); });
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────

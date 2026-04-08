@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="120">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Masters Pool — Golfer Costs</title>
   <link rel="icon" type="image/png" href="masters_pool_logo.png">
@@ -11,7 +10,79 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="shared.css">
   <style>
-    .container { max-width: 600px; margin: auto; padding: 24px 20px; }
+    .container { max-width: 860px; margin: auto; padding: 24px 20px; }
+
+    .costs-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .costs-search {
+      flex: 1;
+      padding: 7px 12px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .costs-search:focus { border-color: var(--green); }
+    .costs-search::placeholder { color: var(--text-muted); }
+    .costs-count {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .costs-table-wrap { overflow-x: auto; }
+
+    .sort-th {
+      cursor: pointer;
+      user-select: none;
+    }
+    .sort-th:hover { color: #fff; }
+    .sort-th .sort-icon { opacity: 0.45; margin-left: 3px; font-size: 9px; transition: opacity 0.15s; }
+    .sort-th.sorted-asc .sort-icon,
+    .sort-th.sorted-desc .sort-icon { opacity: 1; }
+
+    .td-r { text-align: right; font-family: 'DM Mono', monospace; font-size: 13px; }
+    .td-name { font-weight: 600; }
+    .td-status-inactive { opacity: 0.5; }
+
+    /* Budget bar at top of card */
+    .budget-bar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 9px 16px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+    }
+    .budget-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 11px;
+      letter-spacing: 0.3px;
+    }
+    .bc-info { background: rgba(0,103,71,0.1); color: var(--green); border: 1px solid rgba(0,103,71,0.2); }
+    .bc-tip  { background: var(--gold-dim); color: var(--gold); border: 1px solid rgba(200,149,42,0.2); }
+
+    @media (max-width: 600px) {
+      .col-optional { display: none; }
+    }
   </style>
 </head>
 <body>
@@ -19,7 +90,6 @@
 <header style="position:relative">
   <img class="logo" src="masters_pool_logo.png" alt="Masters Pool Logo">
   <div class="site-title">Masters Pool</div>
-  
   <div class="site-subtitle">Augusta National · <span id="year"></span></div>
   <button class="theme-toggle" aria-label="Toggle colour theme"><span class="tt-icon">☀</span><span class="tt-label">Light</span></button>
 </header>
@@ -34,61 +104,170 @@
   <a href="rules.html">Rules</a>
 </nav>
 
-
 <div class="container">
   <div class="card">
     <div class="card-header">
-      <div class="card-title">Golfer Costs</div>
+      <span class="card-title">Golfer Costs</span>
+      <span id="costsLiveBadge" class="live-badge" style="display:none">Live</span>
     </div>
-    <table id="golferCosts"></table>
+    <div class="budget-bar">
+      <span class="budget-chip bc-info">$30 budget per team · max 10 golfers</span>
+      <span class="budget-chip bc-tip">💡 Click any column header to sort</span>
+    </div>
+    <div class="costs-toolbar">
+      <input type="search" id="costsSearch" placeholder="Search golfers…" class="costs-search" autocomplete="off">
+      <span id="costsCount" class="costs-count"></span>
+    </div>
+    <div class="costs-table-wrap">
+      <table id="costsTable">
+        <thead>
+          <tr>
+            <th class="sort-th" data-sort="name">Golfer <span class="sort-icon">↕</span></th>
+            <th class="sort-th" data-sort="cost" style="text-align:right">Cost <span class="sort-icon">↕</span></th>
+            <th style="text-align:right;width:50px">Pos</th>
+            <th style="text-align:right;width:64px">Score</th>
+            <th class="col-optional" style="text-align:right;width:58px">Today</th>
+            <th class="col-optional sort-th" data-sort="winPct" style="text-align:right;width:68px">Win % <span class="sort-icon">↕</span></th>
+            <th class="col-optional sort-th" data-sort="owgr" style="text-align:right;width:72px">OWGR <span class="sort-icon">↕</span></th>
+          </tr>
+        </thead>
+        <tbody id="costsBody">
+          <tr><td colspan="7"><span class="skel" style="width:80%"></span></td></tr>
+          <tr><td colspan="7"><span class="skel" style="width:65%"></span></td></tr>
+          <tr><td colspan="7"><span class="skel" style="width:72%"></span></td></tr>
+          <tr><td colspan="7"><span class="skel" style="width:58%"></span></td></tr>
+          <tr><td colspan="7"><span class="skel" style="width:88%"></span></td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 
 <script src="shared.js"></script>
 <script>
-function formatMoney(value) {
-  const raw = value?.toString().replace(/[^\d.-]/g, '');
-  const num = parseFloat(raw);
-  return !isNaN(num) ? '$' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : value;
+let costsData  = [];
+let sortField  = 'cost';
+let sortDir    = 1; // 1 = ascending
+
+function normName(s) {
+  return s.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9 ]/g, '')
+    .replace(/\s+/g, ' ').trim();
 }
 
-function loadTSV(url, tableId, moneyColumnNames = []) {
-  return fetch(url)
-    .then(response => {
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return response.text();
-    })
-    .then(data => {
-      const rows = data.trim().split('\n').map(r => r.split('\t'));
-      const headers = rows[0];
-      const moneyIndices = headers.map((h, i) => moneyColumnNames.some(name => h.trim().toLowerCase().includes(name.toLowerCase())) ? i : -1).filter(i => i !== -1);
-      const table = document.getElementById(tableId);
-      const thead = document.createElement('thead');
-      const headerRow = document.createElement('tr');
-      headers.forEach(h => {
-        const th = document.createElement('th');
-        th.textContent = h;
-        headerRow.appendChild(th);
-      });
-      thead.appendChild(headerRow);
-      table.innerHTML = '';
-      table.appendChild(thead);
-      const tbody = document.createElement('tbody');
-      rows.slice(1).forEach(row => {
-        const tr = document.createElement('tr');
-        row.forEach((cell, j) => {
-          const td = document.createElement('td');
-          td.textContent = moneyIndices.includes(j) ? formatMoney(cell) : cell;
-          tr.appendChild(td);
-        });
-        tbody.appendChild(tr);
-      });
-      table.appendChild(tbody);
+function winPctStyle(pct) {
+  if (pct == null) return '';
+  if (pct >= 25) return 'color:var(--green);font-weight:700';
+  if (pct >= 15) return 'color:#15803d;font-weight:600';
+  if (pct >= 7)  return 'color:#166534';
+  return '';
+}
+
+function renderCosts() {
+  const q = (document.getElementById('costsSearch')?.value || '').toLowerCase().trim();
+  let rows = q ? costsData.filter(g => g.name.toLowerCase().includes(q)) : [...costsData];
+
+  rows.sort((a, b) => {
+    if (sortField === 'name') return sortDir * (a.name || '').localeCompare(b.name || '');
+    const av = a[sortField], bv = b[sortField];
+    return sortDir * ((av ?? Infinity) - (bv ?? Infinity));
+  });
+
+  document.getElementById('costsCount').textContent = `${rows.length} golfer${rows.length !== 1 ? 's' : ''}`;
+
+  document.getElementById('costsBody').innerHTML = rows.map(g => {
+    const posCell   = g.pos   != null ? esc(String(g.pos))   : '—';
+    const scoreCell = g.score != null ? esc(String(g.score)) : '—';
+    const todayCell = g.today != null ? esc(String(g.today)) : '—';
+    const winCell   = g.winPct != null ? g.winPct.toFixed(1) + '%' : '—';
+    const owgrCell  = g.owgr  != null ? '#' + g.owgr          : '—';
+    const inactive  = g.status && g.status !== 'active';
+    const rowStyle  = inactive ? ' class="td-status-inactive"' : '';
+    const statusBadge = inactive
+      ? ` <span style="font-size:9px;font-family:'DM Sans',sans-serif;font-weight:600;padding:1px 5px;border-radius:3px;background:#fee2e2;color:#991b1b;text-transform:uppercase">${esc(g.status)}</span>`
+      : '';
+    return `<tr${rowStyle}>
+      <td class="td-name">${esc(g.name)}${statusBadge}</td>
+      <td class="money-cell">$${g.cost.toFixed(1)}</td>
+      <td class="td-r" style="color:var(--text-muted);font-size:12px">${posCell}</td>
+      <td class="td-r ${scoreClass(g.score || '')}">${scoreCell}</td>
+      <td class="td-r col-optional ${scoreClass(g.today || '')}">${todayCell}</td>
+      <td class="td-r col-optional" style="${winPctStyle(g.winPct)}">${winCell}</td>
+      <td class="td-r col-optional" style="color:var(--text-muted)">${owgrCell}</td>
+    </tr>`;
+  }).join('');
+
+  // Update sort header indicators
+  document.querySelectorAll('#costsTable .sort-th').forEach(th => {
+    const active = th.dataset.sort === sortField;
+    const icon = th.querySelector('.sort-icon');
+    if (!icon) return;
+    icon.textContent = active ? (sortDir === 1 ? '▲' : '▼') : '↕';
+    th.classList.toggle('sorted-asc',  active && sortDir ===  1);
+    th.classList.toggle('sorted-desc', active && sortDir === -1);
+  });
+}
+
+// ── Load costs TSV + live enrichment ──────────────────────────────────────────
+const costsUrl = '/api/sheet?url=' + encodeURIComponent(
+  'https://docs.google.com/spreadsheets/d/e/2PACX-1vT_htvNiJZPFTNohWOu_fT0VjKlQQWfMFEi08SU1tlN3HHauBbe-I5O3KPbwc-WPkBR8Hdh5yEMssOl/pub?gid=258241386&single=true&output=tsv'
+);
+
+Promise.allSettled([
+  fetch(costsUrl).then(r => r.ok ? r.text() : Promise.reject('TSV error')),
+  fetch('/api/leaderboard').then(r => r.ok ? r.json() : Promise.reject('API error')),
+]).then(([tsvResult, liveResult]) => {
+
+  // Parse TSV into costsData
+  if (tsvResult.status === 'fulfilled') {
+    const rows = tsvResult.value.trim().split('\n').map(r => r.split('\t').map(c => c.trim()));
+    const hdrs = rows[0].map(h => h.toLowerCase());
+    const nameCol = Math.max(0, hdrs.findIndex(h => h.includes('golfer') || h.includes('name') || h.includes('player')));
+    const costCol = Math.max(1, hdrs.findIndex(h => h.includes('cost') || h.includes('price') || h.includes('amount')));
+    costsData = rows.slice(1)
+      .filter(r => r[nameCol]?.trim())
+      .map(r => ({
+        name: r[nameCol]?.trim() || '',
+        cost: parseFloat((r[costCol] || '0').replace(/[^\d.]/g, '')) || 0,
+      }));
+  }
+
+  // Enrich with live leaderboard data
+  if (liveResult.status === 'fulfilled' && liveResult.value.mastersLeaderboard) {
+    const liveMap = {};
+    for (const p of liveResult.value.mastersLeaderboard) liveMap[normName(p.name)] = p;
+    costsData = costsData.map(g => {
+      const live = liveMap[normName(g.name)] || {};
+      return {
+        ...g,
+        pos:    live.position ?? null,
+        score:  live.score    ?? null,
+        today:  live.today    ?? null,
+        winPct: live.winPct   != null ? live.winPct * 100 : null,
+        owgr:   live.owgrRank ?? null,
+        status: live.status   ?? null,
+      };
     });
-}
+    document.getElementById('costsLiveBadge').style.display = '';
+    // Default sort shifts to position when live data available
+    if (costsData.some(g => g.pos != null)) { sortField = 'cost'; }
+  }
 
-const costsUrl = "/api/sheet?url=" + encodeURIComponent("https://docs.google.com/spreadsheets/d/e/2PACX-1vT_htvNiJZPFTNohWOu_fT0VjKlQQWfMFEi08SU1tlN3HHauBbe-I5O3KPbwc-WPkBR8Hdh5yEMssOl/pub?gid=258241386&single=true&output=tsv");
-loadTSV(costsUrl, 'golferCosts', ['cost', 'price', 'amount']).catch(() => {});
+  renderCosts();
+}).catch(() => renderCosts());
+
+// ── Interaction wiring ────────────────────────────────────────────────────────
+document.getElementById('costsSearch').addEventListener('input', renderCosts);
+
+document.querySelectorAll('#costsTable .sort-th').forEach(th => {
+  th.addEventListener('click', () => {
+    const f = th.dataset.sort;
+    if (sortField === f) { sortDir *= -1; }
+    else { sortField = f; sortDir = f === 'name' ? 1 : 1; }
+    renderCosts();
+  });
+});
 </script>
 </body>
 </html>
