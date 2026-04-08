@@ -619,21 +619,11 @@ function buildSummaryTable(selectedNames) {
     const teamTodayStr = fmtTeamScore(teamTodayVal);
     tr.innerHTML =
       `<td style="font-family:'DM Mono',monospace;font-weight:600;font-size:15px">${esc(rankDisplay)}</td>` +
-      `<td><div class="team-row-inner"><span class="team-expand-chevron">▸</span><span class="team-name"><a class="team-link" href="#leaderboard-team-${esc(entry.name.replace(/\s+/g,'-'))}">${esc(entry.name)}</a></span></div></td>` +
+      `<td><div class="team-row-inner"><span class="team-expand-chevron">▸</span><a class="team-spotlight-link" href="team.html?name=${encodeURIComponent(entry.name)}">${esc(entry.name)}</a></div></td>` +
       `<td class="${scoreClass(teamScoreStr)}" style="text-align:center;font-family:'DM Mono',monospace;font-weight:600">${esc(teamScoreStr)}</td>` +
       `<td class="${scoreClass(teamTodayStr)}" style="text-align:center;font-family:'DM Mono',monospace">${esc(teamTodayStr)}</td>` +
       `<td class="money-cell">${formatMoney(entry.totalEarnings)}</td>`;
     tbody.appendChild(tr);
-
-    // team-link: scroll to + expand the matching row in the main leaderboard
-    tr.querySelector('.team-link').addEventListener('click', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      const target = document.querySelector(`#ourLeaderboard tbody tr[data-team-name="${CSS.escape(entry.name)}"]`);
-      if (!target) return;
-      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      if (target.dataset.expanded !== 'true') target.click();
-    });
 
     const detailTr = document.createElement('tr');
     detailTr.classList.add('team-detail-row');
@@ -661,7 +651,8 @@ function buildSummaryTable(selectedNames) {
     detailTr.appendChild(detailTd);
     tbody.appendChild(detailTr);
 
-    tr.addEventListener('click', function () {
+    tr.addEventListener('click', function (e) {
+      if (e.target.closest('a')) return;
       const expanded = this.dataset.expanded === 'true';
       this.dataset.expanded = String(!expanded);
       const chevron = this.querySelector('.team-expand-chevron');
