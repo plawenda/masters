@@ -405,26 +405,49 @@ function renderPoolTable(entries) {
 }
 
 function renderShowMore(entries) {
-  const existing = document.getElementById('showMoreBtn');
+  const existing = document.getElementById('showMoreWrap');
   if (existing) existing.remove();
   const remaining = entries.length - visibleCount;
   if (remaining <= 0) return;
-  const btn = document.createElement('button');
-  btn.id = 'showMoreBtn';
-  btn.className = 'show-more-btn';
-  const next = Math.min(50, remaining);
-  btn.textContent = `Show ${next} more — ${remaining} remaining`;
-  btn.addEventListener('click', () => {
-    visibleCount += 50;
-    renderPoolTable(allEntries);
-    reApplyExpanded();
+
+  const wrap = document.createElement('div');
+  wrap.id = 'showMoreWrap';
+  wrap.style.cssText = 'display:flex;gap:8px;';
+
+  function applyHighlights() {
     const savedNames = JSON.parse(localStorage.getItem('selectedTeamNames') || '[]');
     document.querySelectorAll('#ourLeaderboard tbody tr[data-team-name]').forEach(tr => {
       tr.classList.toggle('highlight', savedNames.includes(tr.dataset.teamName));
     });
+  }
+
+  const next = Math.min(50, remaining);
+  const btnMore = document.createElement('button');
+  btnMore.className = 'show-more-btn';
+  btnMore.style.flex = '1';
+  btnMore.textContent = `Show ${next} more — ${remaining} remaining`;
+  btnMore.addEventListener('click', () => {
+    visibleCount += 50;
+    renderPoolTable(allEntries);
+    reApplyExpanded();
+    applyHighlights();
   });
+
+  const btnAll = document.createElement('button');
+  btnAll.className = 'show-more-btn';
+  btnAll.style.cssText = 'flex:0 0 auto;white-space:nowrap;';
+  btnAll.textContent = `Show all ${entries.length}`;
+  btnAll.addEventListener('click', () => {
+    visibleCount = entries.length;
+    renderPoolTable(allEntries);
+    reApplyExpanded();
+    applyHighlights();
+  });
+
+  wrap.appendChild(btnMore);
+  wrap.appendChild(btnAll);
   const poolCard = document.querySelector('.leaderboard-box:first-child > .card');
-  if (poolCard) poolCard.appendChild(btn);
+  if (poolCard) poolCard.appendChild(wrap);
 }
 
 function reApplyExpanded() {
