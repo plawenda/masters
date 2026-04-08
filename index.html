@@ -311,6 +311,25 @@ function winPctStyle(pct) {
   return 'color:var(--text-muted)';
 }
 
+// ── Team score helpers ────────────────────────────────────────────────────────
+function sumScore(golfers, field) {
+  let total = 0, hasAny = false;
+  for (const g of golfers) {
+    if (g.dropped) continue;
+    const s = g[field];
+    if (!s || s === '-' || s === '?') continue;
+    const n = s === 'E' ? 0 : parseInt(s.replace('+', ''), 10);
+    if (!isNaN(n)) { total += n; hasAny = true; }
+  }
+  return hasAny ? total : null;
+}
+
+function fmtTeamScore(n) {
+  if (n === null) return '—';
+  if (n === 0) return 'E';
+  return n > 0 ? `+${n}` : `${n}`;
+}
+
 // ── Render pool leaderboard (with expandable golfer sub-rows) ─────────────────
 const expandedTeams = new Set();
 let visibleCount = 50;
@@ -319,7 +338,7 @@ function renderPoolTable(entries) {
   const table = document.getElementById('ourLeaderboard');
   table.innerHTML = '';
   const thead = document.createElement('thead');
-  thead.innerHTML = '<tr><th style="width:44px">Pos</th><th>Team</th><th style="text-align:right">Total</th></tr>';
+  thead.innerHTML = '<tr><th style="width:44px">Pos</th><th>Team</th><th style="text-align:center;width:54px">Score</th><th style="text-align:center;width:54px">Today</th><th style="text-align:right">Total</th></tr>';
   table.appendChild(thead);
   const tbody = document.createElement('tbody');
   const visible = entries.slice(0, visibleCount);
@@ -331,9 +350,15 @@ function renderPoolTable(entries) {
     if (entry.rank === 1) tr.classList.add('is-leader');
     const peakStar = (entry.peakRank === 1 && entry.rank !== 1)
       ? `<span class="peak-badge" title="Led the pool at some point today">★</span>` : '';
+    const teamScoreVal = sumScore(entry.golfers || [], 'score');
+    const teamTodayVal = sumScore(entry.golfers || [], 'today');
+    const teamScoreStr = fmtTeamScore(teamScoreVal);
+    const teamTodayStr = fmtTeamScore(teamTodayVal);
     tr.innerHTML =
       `<td style="font-family:'DM Mono',monospace;font-weight:600;font-size:15px">${esc(String(entry.rank))}</td>` +
       `<td><div class="team-row-inner"><span class="team-expand-chevron">▸</span><span class="team-name">${esc(entry.name)}${peakStar}</span></div></td>` +
+      `<td class="${scoreClass(teamScoreStr)}" style="text-align:center;font-family:'DM Mono',monospace;font-weight:600">${esc(teamScoreStr)}</td>` +
+      `<td class="${scoreClass(teamTodayStr)}" style="text-align:center;font-family:'DM Mono',monospace">${esc(teamTodayStr)}</td>` +
       `<td class="money-cell">${formatMoney(entry.totalEarnings)}</td>`;
     tbody.appendChild(tr);
 
@@ -341,7 +366,7 @@ function renderPoolTable(entries) {
     detailTr.classList.add('team-detail-row');
     detailTr.style.display = 'none';
     const detailTd = document.createElement('td');
-    detailTd.colSpan = 3;
+    detailTd.colSpan = 5;
     detailTd.className = 'team-detail-td';
     const golferRows = (entry.golfers || []).map(g => {
       const inactive = g.status && g.status !== 'active';
@@ -536,16 +561,22 @@ function buildSummaryTable(selectedNames) {
   const selected = allEntries.filter(e => selectedNames.includes(e.name));
   const table = document.createElement('table');
   const thead = document.createElement('thead');
-  thead.innerHTML = '<tr><th style="width:44px">Pos</th><th>Team</th><th style="text-align:right">Total</th></tr>';
+  thead.innerHTML = '<tr><th style="width:44px">Pos</th><th>Team</th><th style="text-align:center;width:54px">Score</th><th style="text-align:center;width:54px">Today</th><th style="text-align:right">Total</th></tr>';
   table.appendChild(thead);
   const tbody = document.createElement('tbody');
   selected.forEach(entry => {
     const tr = document.createElement('tr');
     tr.dataset.teamName = entry.name;
     tr.dataset.expanded = 'false';
+    const teamScoreVal = sumScore(entry.golfers || [], 'score');
+    const teamTodayVal = sumScore(entry.golfers || [], 'today');
+    const teamScoreStr = fmtTeamScore(teamScoreVal);
+    const teamTodayStr = fmtTeamScore(teamTodayVal);
     tr.innerHTML =
       `<td style="font-family:'DM Mono',monospace;font-weight:600;font-size:15px">${esc(String(entry.rank))}</td>` +
       `<td><div class="team-row-inner"><span class="team-expand-chevron">▸</span><span class="team-name">${esc(entry.name)}</span></div></td>` +
+      `<td class="${scoreClass(teamScoreStr)}" style="text-align:center;font-family:'DM Mono',monospace;font-weight:600">${esc(teamScoreStr)}</td>` +
+      `<td class="${scoreClass(teamTodayStr)}" style="text-align:center;font-family:'DM Mono',monospace">${esc(teamTodayStr)}</td>` +
       `<td class="money-cell">${formatMoney(entry.totalEarnings)}</td>`;
     tbody.appendChild(tr);
 
@@ -553,7 +584,7 @@ function buildSummaryTable(selectedNames) {
     detailTr.classList.add('team-detail-row');
     detailTr.style.display = 'none';
     const detailTd = document.createElement('td');
-    detailTd.colSpan = 3;
+    detailTd.colSpan = 5;
     const golferRows = (entry.golfers || []).map(g => {
       const inactive = g.status && g.status !== 'active';
       const dropped  = !!g.dropped;
@@ -683,7 +714,7 @@ function applyPoolFlash(changed) {
     const fields = changed.get(tr.dataset.teamName);
     if (!fields) return;
     if (fields.has('rank'))     flashCell(tr.cells[0]);
-    if (fields.has('earnings')) flashCell(tr.cells[2]);
+    if (fields.has('earnings')) flashCell(tr.cells[4]);
   });
 }
 
@@ -723,7 +754,7 @@ function loadData() {
         const msg = 'style="text-align:center;padding:32px;color:var(--text-muted)"';
         const t1 = document.getElementById('ourLeaderboard');
         const t2 = document.getElementById('mastersLeaderboard');
-        if (t1) t1.innerHTML = `<tbody><tr><td colspan="4" ${msg}>Tournament not yet underway — check back in April!</td></tr></tbody>`;
+        if (t1) t1.innerHTML = `<tbody><tr><td colspan="5" ${msg}>Tournament not yet underway — check back in April!</td></tr></tbody>`;
         if (t2) t2.innerHTML = `<tbody><tr><td colspan="6" ${msg}>Tournament not yet underway — check back in April!</td></tr></tbody>`;
         return;
       }
@@ -763,7 +794,7 @@ function loadData() {
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 initMastersCollapsible();
-renderSkeleton('ourLeaderboard', 3);
+renderSkeleton('ourLeaderboard', 5);
 renderSkeleton('mastersLeaderboard', 6);
 loadData();
 setInterval(loadData, 60000);
