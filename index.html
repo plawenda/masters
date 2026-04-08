@@ -231,13 +231,10 @@
 </head>
 <body>
 
-<header style="position:relative">
+<header>
   <img class="logo" src="masters_pool_logo.png" alt="Masters Pool Logo" />
   <div class="site-title">Masters Pool</div>
   <div class="site-subtitle">Augusta National · <span id="year"></span></div>
-  <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
-    <span id="themeIcon">☀</span> <span id="themeLabel">Light</span>
-  </button>
 </header>
 
 <nav>
@@ -381,9 +378,9 @@ function renderPoolTable(entries) {
     const hotBadge  = isHotTeam ? `<span class="hot-badge" title="Team is on fire today">HOT</span>` : '';
     tr.innerHTML =
       `<td style="font-family:'DM Mono',monospace;font-weight:600;font-size:15px">${esc(rankDisplay)}</td>` +
-      `<td><div class="team-row-inner"><span class="team-expand-chevron">▸</span><span class="team-name">${esc(entry.name)}${peakStar}</span><span class="mobile-move">${moveHtml !== '—' ? moveHtml : ''}</span>${hotBadge ? `<span class="mobile-hot">${hotBadge}</span>` : ''}</div></td>` +
+      `<td><div class="team-row-inner"><span class="team-expand-chevron">▸</span><span class="team-name">${esc(entry.name)}${peakStar}</span>${hotBadge}<span class="mobile-move">${moveHtml !== '—' ? moveHtml : ''}</span></div></td>` +
       `<td class="col-score ${scoreClass(teamScoreStr)}" style="text-align:center;font-family:'DM Mono',monospace;font-weight:600">${esc(teamScoreStr)}</td>` +
-      `<td class="${scoreClass(teamTodayStr)}" style="text-align:center;font-family:'DM Mono',monospace">${esc(teamTodayStr)}${hotBadge}</td>` +
+      `<td class="${scoreClass(teamTodayStr)}" style="text-align:center;font-family:'DM Mono',monospace">${esc(teamTodayStr)}</td>` +
       `<td class="col-trend spark-cell">${trendHtml}</td>` +
       `<td class="money-cell">${formatMoney(entry.totalEarnings)}</td>`;
     tbody.appendChild(tr);
