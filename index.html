@@ -424,7 +424,7 @@ function renderShowMore(entries) {
   const next = Math.min(50, remaining);
   const btnMore = document.createElement('button');
   btnMore.className = 'show-more-btn';
-  btnMore.style.flex = '1';
+  btnMore.style.flex = '1 1 0';
   btnMore.textContent = `Show ${next} more — ${remaining} remaining`;
   btnMore.addEventListener('click', () => {
     visibleCount += 50;
@@ -435,7 +435,7 @@ function renderShowMore(entries) {
 
   const btnAll = document.createElement('button');
   btnAll.className = 'show-more-btn';
-  btnAll.style.cssText = 'flex:0 0 auto;white-space:nowrap;';
+  btnAll.style.flex = '1 1 0';
   btnAll.textContent = `Show all ${entries.length}`;
   btnAll.addEventListener('click', () => {
     visibleCount = entries.length;
