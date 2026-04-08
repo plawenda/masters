@@ -315,7 +315,7 @@ function winPctStyle(pct) {
 function sumScore(golfers, field) {
   let total = 0, hasAny = false;
   for (const g of golfers) {
-    if (g.dropped) continue;
+    if (g.dropped || (g.status && g.status !== 'active')) continue;
     const s = g[field];
     if (!s || s === '-' || s === '?') continue;
     const n = s === 'E' ? 0 : parseInt(s.replace('+', ''), 10);
