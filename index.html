@@ -12,6 +12,8 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
   <style>
     .container { max-width: 1300px; margin: auto; padding: 24px 20px; }
+    html { overflow-x: hidden; }
+    #poolTableWrap { overflow-x: auto; }
 
     /* ── Welcome banner ── */
     .welcome-strip {
@@ -267,7 +269,7 @@
           <span class="card-title">Our Leaderboard</span>
           <span class="live-badge">Live</span>
         </div>
-        <table id="ourLeaderboard"></table>
+        <div id="poolTableWrap"><table id="ourLeaderboard"></table></div>
       </div>
     </div>
     <div class="leaderboard-box">
@@ -331,7 +333,7 @@ function renderPoolTable(entries) {
       ? `<span class="peak-badge" title="Led the pool at some point today">★</span>` : '';
     tr.innerHTML =
       `<td style="font-family:'DM Mono',monospace;font-weight:600;font-size:15px">${esc(String(entry.rank))}</td>` +
-      `<td><div class="team-row-inner"><span class="team-name">${esc(entry.name)}${peakStar}</span><span class="team-expand-chevron">▸</span></div></td>` +
+      `<td><div class="team-row-inner"><span class="team-expand-chevron">▸</span><span class="team-name">${esc(entry.name)}${peakStar}</span></div></td>` +
       `<td class="money-cell">${formatMoney(entry.totalEarnings)}</td>`;
     tbody.appendChild(tr);
 
@@ -543,7 +545,7 @@ function buildSummaryTable(selectedNames) {
     tr.dataset.expanded = 'false';
     tr.innerHTML =
       `<td style="font-family:'DM Mono',monospace;font-weight:600;font-size:15px">${esc(String(entry.rank))}</td>` +
-      `<td><div class="team-row-inner"><span class="team-name">${esc(entry.name)}</span><span class="team-expand-chevron">▸</span></div></td>` +
+      `<td><div class="team-row-inner"><span class="team-expand-chevron">▸</span><span class="team-name">${esc(entry.name)}</span></div></td>` +
       `<td class="money-cell">${formatMoney(entry.totalEarnings)}</td>`;
     tbody.appendChild(tr);
 
@@ -609,6 +611,11 @@ function initTeamSelector(entries) {
     removeItemButton: true, searchPlaceholderValue: 'Search teams...',
     allowHTML: false, searchEnabled: true, renderChoiceLimit: -1,
     itemSelectText: '', position: 'auto'
+  });
+  // Force focus on the search input when dropdown opens so mobile keyboard appears
+  teamSelect.addEventListener('showDropdown', () => {
+    const input = document.querySelector('.choices__input--cloned');
+    if (input) setTimeout(() => input.focus(), 50);
   });
   const savedNames = JSON.parse(localStorage.getItem('selectedTeamNames') || '[]');
   savedNames.forEach(name => choices.setChoiceByValue(name));
@@ -722,7 +729,12 @@ function loadData() {
       }
       if (data.lastUpdated) {
         const bar = document.getElementById('lastUpdatedBar');
-        if (bar) bar.textContent = 'Updated ' + new Date(data.lastUpdated).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
+        if (bar) {
+          try {
+            const d = new Date(data.lastUpdated);
+            bar.textContent = 'Updated ' + (isNaN(d) ? data.lastUpdated : d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }));
+          } catch(e) { bar.textContent = 'Updated recently'; }
+        }
       }
       const pool    = data.poolLeaderboard    || [];
       const masters = data.mastersLeaderboard || [];
