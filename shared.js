@@ -25,7 +25,46 @@
       .catch(() => { dispatchEl.textContent = 'Follow along as the drama unfolds at Augusta National.'; });
   }
 
+  initDarkMode();
 })();
+
+// ── Dark mode ──────────────────────────────────────────────────────────────────
+function initDarkMode() {
+  const saved = localStorage.getItem('theme');
+  if (saved) document.documentElement.setAttribute('data-theme', saved);
+
+  function isDark() {
+    const attr = document.documentElement.getAttribute('data-theme');
+    if (attr === 'dark')  return true;
+    if (attr === 'light') return false;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+
+  function syncToggle() {
+    const dark = isDark();
+    document.querySelectorAll('.theme-toggle').forEach(btn => {
+      const icon  = btn.querySelector('.tt-icon');
+      const label = btn.querySelector('.tt-label');
+      if (icon)  icon.textContent  = dark ? '☽' : '☀';
+      if (label) label.textContent = dark ? 'Dark' : 'Light';
+    });
+  }
+
+  syncToggle();
+
+  document.querySelectorAll('.theme-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const next = isDark() ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      syncToggle();
+    });
+  });
+
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if (!localStorage.getItem('theme')) syncToggle();
+  });
+}
 
 // ── Utility functions ─────────────────────────────────────────────────────────
 
@@ -43,11 +82,11 @@ function scoreClass(s) {
   return s.startsWith('-') ? 'score-neg' : 'score-pos';
 }
 
-function renderSparkline(history, currentRank) {
+function renderSparkline(history, currentRank, W = 64, H = 20) {
   const ranks = [...(history || []).map(h => h.rank), currentRank].filter(r => r != null);
   if (ranks.length < 2) return '';
   const hi = Math.max(...ranks), lo = Math.min(...ranks), range = hi - lo || 1;
-  const W = 64, H = 20, P = 3;
+  const P = 3;
   const pts = ranks.map((r, i) => {
     const x = (P + (i / (ranks.length - 1)) * (W - 2 * P)).toFixed(1);
     const y = (P + ((r - lo) / range) * (H - 2 * P)).toFixed(1);

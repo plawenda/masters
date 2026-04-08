@@ -159,6 +159,19 @@
     .round-thru { display: block; font-size: 10px; color: var(--text-muted); letter-spacing: 0.5px; }
     .round-today { display: block; font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 600; }
 
+    /* ── Team name spotlight link ── */
+    a.team-spotlight-link {
+      color: inherit;
+      text-decoration: none;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      display: block;
+    }
+    a.team-spotlight-link:hover { color: var(--green); text-decoration: underline; text-underline-offset: 2px; }
+
     /* ── Team detail card (expanded golfer view) ── */
     .team-detail-row > td {
       padding: 0 !important;
@@ -231,10 +244,13 @@
 </head>
 <body>
 
-<header>
+<header style="position:relative">
   <img class="logo" src="masters_pool_logo.png" alt="Masters Pool Logo" />
   <div class="site-title">Masters Pool</div>
   <div class="site-subtitle">Augusta National · <span id="year"></span></div>
+  <button class="theme-toggle" aria-label="Toggle colour theme">
+    <span class="tt-icon">☀</span><span class="tt-label">Light</span>
+  </button>
 </header>
 
 <nav>
@@ -378,7 +394,7 @@ function renderPoolTable(entries) {
     const hotBadge  = isHotTeam ? `<span class="hot-badge" title="Team is on fire today">HOT</span>` : '';
     tr.innerHTML =
       `<td style="font-family:'DM Mono',monospace;font-weight:600;font-size:15px">${esc(rankDisplay)}</td>` +
-      `<td><div class="team-row-inner"><span class="team-expand-chevron">▸</span><span class="team-name">${esc(entry.name)}${peakStar}</span>${hotBadge}<span class="mobile-move">${moveHtml !== '—' ? moveHtml : ''}</span></div></td>` +
+      `<td><div class="team-row-inner"><span class="team-expand-chevron">▸</span><a class="team-spotlight-link" href="team.html?name=${encodeURIComponent(entry.name)}">${esc(entry.name)}${peakStar}</a>${hotBadge}<span class="mobile-move">${moveHtml !== '—' ? moveHtml : ''}</span></div></td>` +
       `<td class="col-score ${scoreClass(teamScoreStr)}" style="text-align:center;font-family:'DM Mono',monospace;font-weight:600">${esc(teamScoreStr)}</td>` +
       `<td class="${scoreClass(teamTodayStr)}" style="text-align:center;font-family:'DM Mono',monospace">${esc(teamTodayStr)}</td>` +
       `<td class="col-trend spark-cell">${trendHtml}</td>` +
@@ -412,7 +428,8 @@ function renderPoolTable(entries) {
     detailTr.appendChild(detailTd);
     tbody.appendChild(detailTr);
 
-    tr.addEventListener('click', function () {
+    tr.addEventListener('click', function (e) {
+      if (e.target.closest('a')) return; // let link navigate normally
       const expanded = this.dataset.expanded === 'true';
       this.dataset.expanded = String(!expanded);
       const chevron = this.querySelector('.team-expand-chevron');

@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Team Spotlight — Masters Pool</title>
+  <link rel="icon" type="image/png" href="masters_pool_logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    /* ── Layout ─────────────────────────────────────────────────────────────── */
+    html { overflow-x: hidden; }
+    .container { max-width: 1020px; margin: auto; padding: 28px 20px; }
+
+    /* ── Hero ───────────────────────────────────────────────────────────────── */
+    .team-hero {
+      background: var(--green);
+      background-image:
+        repeating-linear-gradient(45deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 8px),
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(255,255,255,0.07) 0%, transparent 100%),
+        linear-gradient(to bottom, #006040 0%, #003d28 100%);
+      border-bottom: 3px solid var(--gold);
+      padding: 28px 20px 32px;
+      text-align: center;
+      color: #fff;
+      position: relative;
+    }
+    .hero-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: rgba(255,255,255,0.55);
+      font-size: 11px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      text-decoration: none;
+      margin-bottom: 20px;
+      transition: color 0.2s;
+    }
+    .hero-back:hover { color: rgba(255,255,255,0.9); }
+    .hero-rank-num {
+      font-family: 'DM Mono', monospace;
+      font-size: 88px;
+      font-weight: 500;
+      line-height: 1;
+      color: var(--gold);
+      text-shadow: 0 4px 24px rgba(200,149,42,0.35);
+      letter-spacing: -2px;
+    }
+    @media (max-width: 600px) { .hero-rank-num { font-size: 60px; } }
+    .hero-rank-sub {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+      margin-top: 2px;
+    }
+    .hero-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 30px;
+      font-weight: 700;
+      margin: 14px 0 10px;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.4);
+      word-break: break-word;
+    }
+    @media (max-width: 600px) { .hero-name { font-size: 22px; } }
+    .hero-badges {
+      display: flex;
+      justify-content: center;
+      gap: 7px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+    .hero-badge {
+      padding: 3px 11px;
+      border-radius: 20px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .hb-up   { background: rgba(34,197,94,0.18);  color: #4ade80; border: 1px solid rgba(74,222,128,0.3); }
+    .hb-down { background: rgba(239,68,68,0.18);   color: #f87171; border: 1px solid rgba(248,113,113,0.3); }
+    .hb-flat { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.15); }
+    .hb-peak { background: rgba(200,149,42,0.2);   color: var(--gold); border: 1px solid rgba(200,149,42,0.35); }
+    .hb-hot  { background: rgba(239,68,68,0.2);    color: #fca5a5; border: 1px solid rgba(239,68,68,0.35); }
+    .hero-kpis {
+      display: flex;
+      justify-content: center;
+      gap: 28px;
+      flex-wrap: wrap;
+    }
+    .hero-kpi { text-align: center; }
+    .hero-kpi-val {
+      font-family: 'DM Mono', monospace;
+      font-size: 24px;
+      font-weight: 500;
+      display: block;
+      line-height: 1.1;
+    }
+    .hero-kpi-label {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
+      margin-top: 3px;
+      display: block;
+    }
+    .hero-spark {
+      margin: 14px auto 0;
+      display: block;
+      opacity: 0.7;
+    }
+
+    /* ── Section heading ─────────────────────────────────────────────────────── */
+    .section-head {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin: 28px 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Golfer cards ────────────────────────────────────────────────────────── */
+    .golfer-cards { display: flex; flex-direction: column; gap: 14px; }
+
+    .golfer-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      transition: box-shadow 0.2s;
+    }
+    .golfer-card:hover { box-shadow: 0 4px 22px rgba(0,0,0,0.1); }
+    .golfer-card.card-dropped { opacity: 0.52; }
+    .golfer-card.card-inactive .gc-body { opacity: 0.65; }
+
+    /* Card header */
+    .gc-header {
+      display: grid;
+      grid-template-columns: 52px 1fr auto auto;
+      align-items: center;
+      gap: 12px;
+      padding: 13px 16px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(to right, rgba(0,103,71,0.055), transparent 60%);
+    }
+    @media (max-width: 600px) {
+      .gc-header { grid-template-columns: 40px 1fr auto; gap: 8px; padding: 11px 12px; }
+      .gc-earn { display: none; }
+    }
+    .gc-pos {
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.2;
+    }
+    .gc-pos.p-top3  { color: var(--gold); }
+    .gc-pos.p-top10 { color: var(--green); }
+    .gc-name-cell { min-width: 0; }
+    .gc-name {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    @media (max-width: 600px) { .gc-name { font-size: 14px; } }
+    .gc-tag {
+      display: inline-block;
+      margin-top: 2px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 1px 6px;
+      border-radius: 3px;
+    }
+    .gc-tag-active   { background: rgba(0,103,71,0.12); color: var(--green); }
+    .gc-tag-cut      { background: #fee2e2; color: #991b1b; }
+    .gc-tag-wd       { background: #fef3c7; color: #92400e; }
+    .gc-tag-dropped  { background: var(--surface2); color: var(--text-muted); }
+    [data-theme="dark"] .gc-tag-cut { background: rgba(220,38,38,0.2); color: #f87171; }
+    [data-theme="dark"] .gc-tag-wd  { background: rgba(217,119,6,0.2); color: #fbbf24; }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) .gc-tag-cut { background: rgba(220,38,38,0.2); color: #f87171; }
+      :root:not([data-theme="light"]) .gc-tag-wd  { background: rgba(217,119,6,0.2); color: #fbbf24; }
+    }
+    .gc-scores { text-align: center; }
+    .gc-score-total {
+      font-family: 'DM Mono', monospace;
+      font-size: 19px;
+      font-weight: 700;
+      display: block;
+      line-height: 1.1;
+    }
+    .gc-score-today {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      display: block;
+      color: var(--text-muted);
+    }
+    .gc-thru {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 10px;
+      color: var(--text-muted);
+      display: block;
+    }
+    .gc-earn {
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--green);
+      text-align: right;
+      white-space: nowrap;
+    }
+    .gc-earn.earn-zero { color: var(--text-muted); font-weight: 400; }
+
+    /* Card body — two-column layout */
+    .gc-body {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+    }
+    @media (max-width: 680px) { .gc-body { grid-template-columns: 1fr; } }
+
+    /* Predictions column */
+    .gc-preds {
+      padding: 16px;
+      border-right: 1px solid var(--border);
+    }
+    @media (max-width: 680px) { .gc-preds { border-right: none; border-bottom: 1px solid var(--border); } }
+    .preds-title {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+    .preds-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 6px;
+    }
+    @media (max-width: 680px) {
+      .preds-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    }
+    .pred-item { text-align: center; }
+    .pred-num {
+      font-family: 'DM Mono', monospace;
+      font-size: 22px;
+      font-weight: 600;
+      display: block;
+      line-height: 1.15;
+    }
+    .pred-num.p-high { color: #15803d; }
+    .pred-num.p-med  { color: #166534; }
+    .pred-num.p-low  { color: var(--text-muted); }
+    .pred-lbl {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-top: 2px;
+      display: block;
+    }
+    .pred-na { color: var(--text-muted); font-style: italic; font-size: 13px; }
+
+    /* Ownership row */
+    .ownership-row {
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .own-bar-track {
+      flex: 1;
+      height: 6px;
+      background: var(--surface2);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .own-bar-fill {
+      height: 100%;
+      background: var(--green);
+      border-radius: 3px;
+      transition: width 0.5s ease;
+    }
+    .own-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    /* SG column */
+    .gc-sg {
+      padding: 14px 18px;
+    }
+    .sg-title {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+    .sg-rows { display: flex; flex-direction: column; gap: 6px; }
+    .sg-row {
+      display: grid;
+      grid-template-columns: 88px 1fr 52px;
+      align-items: center;
+      gap: 8px;
+    }
+    @media (max-width: 400px) { .sg-row { grid-template-columns: 70px 1fr 44px; } }
+    .sg-lbl {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-align: right;
+      white-space: nowrap;
+    }
+    .sg-lbl.lbl-total {
+      font-weight: 700;
+      color: var(--text);
+    }
+    /* Bar track — center zero line via ::after */
+    .sg-track {
+      height: 10px;
+      background: var(--surface2);
+      border-radius: 5px;
+      position: relative;
+      overflow: hidden;
+    }
+    .sg-track::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 1.5px;
+      background: var(--border);
+      transform: translateX(-50%);
+      z-index: 1;
+    }
+    .sg-fill {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      border-radius: 5px;
+      z-index: 0;
+    }
+    .sg-fill.pos       { left: 50%; background: #22c55e; }
+    .sg-fill.neg       { right: 50%; background: #ef4444; }
+    .sg-fill.total-pos { left: 50%; background: linear-gradient(to right, #16a34a, #22c55e); }
+    .sg-fill.total-neg { right: 50%; background: linear-gradient(to left, #b91c1c, #ef4444); }
+    .sg-val {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      font-weight: 600;
+      text-align: left;
+    }
+    .sg-val.total-val { font-size: 13px; font-weight: 700; }
+    .sg-na { color: var(--text-muted); font-style: italic; font-size: 11px; }
+
+    /* No-data placeholder */
+    .gc-no-data {
+      padding: 18px 20px;
+      color: var(--text-muted);
+      font-style: italic;
+      font-size: 13px;
+    }
+
+    /* ── Summary table ─────────────────────────────────────────────────────── */
+    .summary-scroll { overflow-x: auto; }
+    .summary-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .summary-table thead th {
+      background: var(--thead-bg, #004232);
+      color: rgba(255,255,255,0.72);
+      padding: 8px 12px;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      border-bottom: 2px solid var(--gold);
+      text-align: left;
+    }
+    .summary-table thead th.th-r { text-align: right; }
+    .summary-table tbody td {
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--border);
+      font-variant-numeric: tabular-nums;
+    }
+    .summary-table tbody tr:last-child td { border-bottom: none; }
+    .summary-table tbody tr:hover { background: var(--green-dim); }
+    .summary-table tbody tr.tr-inactive { opacity: 0.45; }
+    .summary-table tbody tr.tr-dropped  { opacity: 0.45; font-style: italic; }
+
+    /* ── Loading state ─────────────────────────────────────────────────────── */
+    .team-loading {
+      max-width: 540px;
+      margin: 64px auto;
+      padding: 0 20px;
+      text-align: center;
+    }
+    .loading-skel-block { margin: 10px auto; }
+
+    /* ── Error state ───────────────────────────────────────────────────────── */
+    .team-error {
+      text-align: center;
+      padding: 72px 24px;
+    }
+    .team-error-icon { font-size: 36px; margin-bottom: 14px; }
+    .team-error-msg {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+    .team-error-link {
+      color: var(--green);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .team-error-link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<header style="position:relative">
+  <img class="logo" src="masters_pool_logo.png" alt="Masters Pool Logo">
+  <div class="site-title">Masters Pool</div>
+  <div class="site-subtitle">Augusta National · <span id="year"></span></div>
+  <button class="theme-toggle" aria-label="Toggle colour theme">
+    <span class="tt-icon">☀</span><span class="tt-label">Light</span>
+  </button>
+</header>
+
+<nav>
+  <button class="hamburger" id="menuBtn" aria-label="Toggle menu">&#9776; Menu</button>
+  <a href="index.html">Leaderboard</a>
+  <a href="costs.html">Golfer Costs</a>
+  <a href="prizes.html">Prize Money</a>
+  <a href="payouts.html">Pool Payouts</a>
+  <a href="winners.html">Champions</a>
+  <a href="rules.html">Rules</a>
+</nav>
+
+<!-- Loading -->
+<div id="loadingState" class="team-loading">
+  <div class="loading-skel-block"><span class="skel" style="width:80px;height:80px;border-radius:50%;display:inline-block"></span></div>
+  <div class="loading-skel-block"><span class="skel" style="width:240px;height:20px"></span></div>
+  <div class="loading-skel-block"><span class="skel" style="width:160px;height:14px"></span></div>
+</div>
+
+<!-- Error -->
+<div id="errorState" style="display:none" class="team-error">
+  <div class="team-error-icon">⛳</div>
+  <div class="team-error-msg" id="errorMsg">Team not found.</div>
+  <a class="team-error-link" href="index.html">← Back to leaderboard</a>
+</div>
+
+<!-- Content -->
+<div id="teamContent" style="display:none">
+  <div class="team-hero" id="heroSection"></div>
+  <div class="container">
+    <div class="section-head" id="golferHeading">Golfer Breakdown</div>
+    <div class="golfer-cards" id="golferCards"></div>
+    <div class="section-head" style="margin-top:32px">Team Summary</div>
+    <div class="summary-scroll">
+      <table class="summary-table" id="summaryTable"></table>
+    </div>
+  </div>
+</div>
+
+<script src="shared.js"></script>
+<script>
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+const params   = new URLSearchParams(window.location.search);
+const teamName = params.get('name') || '';
+document.title = teamName ? `${teamName} — Masters Pool` : 'Team Spotlight — Masters Pool';
+
+function normName(s) {
+  return s.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9 ]/g,'')
+    .replace(/\s+/g,' ').trim();
+}
+
+function sumScore(golfers, field) {
+  let total = 0, any = false;
+  for (const g of golfers) {
+    if (g.dropped || (g.status && g.status !== 'active')) continue;
+    const s = g[field];
+    if (!s || s === '-' || s === '?') continue;
+    const n = s === 'E' ? 0 : parseInt(s.replace('+',''), 10);
+    if (!isNaN(n)) { total += n; any = true; }
+  }
+  return any ? total : null;
+}
+
+function fmtScore(n) {
+  if (n === null || n === undefined) return '—';
+  if (n === 0) return 'E';
+  return n > 0 ? `+${n}` : `${n}`;
+}
+
+function predClass(pct) {
+  if (pct == null) return 'p-low';
+  if (pct >= 25)   return 'p-high';
+  if (pct >= 8)    return 'p-med';
+  return 'p-low';
+}
+
+function sgBarHtml(val, isTotal) {
+  if (val == null) return `<div class="sg-track"></div><span class="sg-val sg-na">—</span>`;
+  const MAX = isTotal ? 6 : 3;
+  const pct = Math.min(Math.abs(val) / MAX * 50, 50).toFixed(1);
+  const pos = val >= 0;
+  const side  = pos ? 'pos' : 'neg';
+  const extra = isTotal ? ` total-${pos ? 'pos' : 'neg'}` : '';
+  const style = pos ? `left:50%;width:${pct}%` : `right:50%;width:${pct}%`;
+  const str   = (pos ? '+' : '') + val.toFixed(2);
+  const cls   = pos ? 'score-neg' : 'score-pos';
+  return `<div class="sg-track"><div class="sg-fill ${side}${extra}" style="${style}"></div></div>` +
+         `<span class="sg-val ${cls}${isTotal ? ' total-val' : ''}">${str}</span>`;
+}
+
+// ── Hero ──────────────────────────────────────────────────────────────────────
+
+function renderHero(team, totalTeams) {
+  const scoreVal = sumScore(team.golfers || [], 'score');
+  const todayVal = sumScore(team.golfers || [], 'today');
+  const scoreStr = fmtScore(scoreVal);
+  const todayStr = fmtScore(todayVal);
+  const isHot    = todayVal !== null && todayVal <= -3;
+
+  const moveBadge = team.dailyMove > 0
+    ? `<span class="hero-badge hb-up">▲ ${team.dailyMove} today</span>`
+    : team.dailyMove < 0
+    ? `<span class="hero-badge hb-down">▼ ${Math.abs(team.dailyMove)} today</span>`
+    : `<span class="hero-badge hb-flat">Holding steady</span>`;
+  const peakBadge = (team.peakRank === 1 && team.rank !== 1)
+    ? `<span class="hero-badge hb-peak">★ Led the pool today</span>` : '';
+  const hotBadge = isHot ? `<span class="hero-badge hb-hot">🔥 Hot round</span>` : '';
+
+  const rankStr   = team.rank === 1 ? '1st' : team.rank === 2 ? '2nd' : team.rank === 3 ? '3rd' : `${team.rank}th`;
+  const spark     = renderSparkline(team.history || [], team.rank, 220, 40);
+
+  document.getElementById('heroSection').innerHTML = `
+    <a class="hero-back" href="index.html">← Leaderboard</a>
+    <div class="hero-rank-num">${esc(rankStr)}</div>
+    <div class="hero-rank-sub">of ${totalTeams} teams</div>
+    <div class="hero-name">${esc(teamName)}</div>
+    <div class="hero-badges">${moveBadge}${peakBadge}${hotBadge}</div>
+    <div class="hero-kpis">
+      <div class="hero-kpi">
+        <span class="hero-kpi-val">${formatMoney(team.totalEarnings)}</span>
+        <span class="hero-kpi-label">Projected Earnings</span>
+      </div>
+      <div class="hero-kpi">
+        <span class="hero-kpi-val ${scoreClass(scoreStr)}">${esc(scoreStr)}</span>
+        <span class="hero-kpi-label">Tournament Score</span>
+      </div>
+      <div class="hero-kpi">
+        <span class="hero-kpi-val ${scoreClass(todayStr)}">${esc(todayStr)}</span>
+        <span class="hero-kpi-label">Today</span>
+      </div>
+    </div>
+    ${spark ? `<div style="margin-top:16px;opacity:0.75">${spark}</div>` : ''}
+  `;
+}
+
+// ── Golfer cards ──────────────────────────────────────────────────────────────
+
+const SG_KEYS   = ['sg_putt','sg_arg','sg_app','sg_ott','sg_t2g','sg_total'];
+const SG_LABELS = ['Putting','Around Green','Approach','Off the Tee','Tee-to-Green','Total SG'];
+
+function renderGolferCards(golfers) {
+  document.getElementById('golferCards').innerHTML = golfers.map(g => {
+    const inactive = g.status && g.status !== 'active';
+    const dropped  = !!g.dropped;
+
+    const cardClass = dropped ? 'golfer-card card-dropped'
+                    : inactive ? 'golfer-card card-inactive'
+                    : 'golfer-card';
+
+    // Position badge
+    const posNum  = parseInt(String(g.position || '').replace(/^T/,''), 10);
+    const posCls  = !isNaN(posNum) && posNum <= 3 ? 'p-top3' : !isNaN(posNum) && posNum <= 10 ? 'p-top10' : '';
+    const posDisp = g.position || '—';
+
+    // Status tag
+    const tagHtml = dropped   ? `<span class="gc-tag gc-tag-dropped">Over Budget</span>`
+                  : inactive  ? `<span class="gc-tag gc-tag-${(g.status||'').toLowerCase()}">${esc(g.status||'')}</span>`
+                  : `<span class="gc-tag gc-tag-active">Active</span>`;
+
+    // Scores
+    const scoreCls = scoreClass(g.score);
+    const todayCls = scoreClass(g.today);
+    const thruStr  = g.thru && g.thru !== '-' ? `thru ${esc(String(g.thru))}` : '';
+
+    // Earnings
+    const earnStr = g.earnings > 0 ? formatMoney(g.earnings) : '—';
+    const earnCls = g.earnings > 0 ? 'gc-earn' : 'gc-earn earn-zero';
+
+    // ── Predictions ──
+    const win  = g.winPct    != null ? g.winPct    * 100 : null;
+    const t5   = g.top5Pct   != null ? g.top5Pct   * 100 : null;
+    const mc   = g.makeCutPct!= null ? g.makeCutPct* 100 : null;
+    const own  = g.ownership != null ? g.ownership : null;
+    const hasPreds = win != null || t5 != null || mc != null;
+
+    function predItem(val, lbl) {
+      const display = val != null ? val.toFixed(1) + '%' : '—';
+      const cls = val != null ? predClass(val) : 'p-low';
+      return `<div class="pred-item">
+        <span class="pred-num ${cls}">${display}</span>
+        <span class="pred-lbl">${lbl}</span>
+      </div>`;
+    }
+
+    const ownBar = own != null ? `
+      <div class="ownership-row">
+        <span class="pred-lbl" style="white-space:nowrap">Pool owned</span>
+        <div class="own-bar-track"><div class="own-bar-fill" style="width:${Math.min(own,100)}%"></div></div>
+        <span class="own-label">${own}%</span>
+      </div>` : '';
+
+    const predsHtml = `
+      <div class="gc-preds">
+        <div class="preds-title">Predictions</div>
+        <div class="preds-grid">
+          ${predItem(win, 'Win')}
+          ${predItem(t5,  'Top 5')}
+          ${predItem(mc,  'Make Cut')}
+          ${predItem(win != null ? null : null, '')}
+        </div>
+        ${ownBar}
+        ${!hasPreds ? '<div class="pred-na">No live predictions</div>' : ''}
+      </div>`;
+
+    // ── SG bars ──
+    const hasSG = g.sg && SG_KEYS.some(k => g.sg[k] != null);
+    const sgHtml = `
+      <div class="gc-sg">
+        <div class="sg-title">Strokes Gained</div>
+        <div class="sg-rows">
+          ${SG_KEYS.map((k, i) => {
+            const val = g.sg ? g.sg[k] : null;
+            const isTotal = k === 'sg_total';
+            return `<div class="sg-row">
+              <span class="sg-lbl${isTotal ? ' lbl-total' : ''}">${SG_LABELS[i]}</span>
+              ${sgBarHtml(val, isTotal)}
+            </div>`;
+          }).join('')}
+        </div>
+        ${!hasSG ? '<div class="sg-na" style="margin-top:4px;font-size:12px">No SG data available</div>' : ''}
+      </div>`;
+
+    const bodyHtml = (inactive && !hasPreds && !hasSG)
+      ? `<div class="gc-no-data">No live data — player is ${esc(g.status||'inactive')}</div>`
+      : `<div class="gc-body">${predsHtml}${sgHtml}</div>`;
+
+    return `<div class="${cardClass}">
+      <div class="gc-header">
+        <div class="gc-pos ${posCls}">${esc(String(posDisp))}</div>
+        <div class="gc-name-cell">
+          <div class="gc-name">${dropped ? `<del>${esc(g.name)}</del>` : esc(g.name)}</div>
+          ${tagHtml}
+        </div>
+        <div class="gc-scores">
+          <span class="gc-score-total ${scoreCls}">${esc(g.score || '—')}</span>
+          ${g.today && g.today !== '-' ? `<span class="gc-score-today ${todayCls}">${esc(g.today)}</span>` : ''}
+          ${thruStr ? `<span class="gc-thru">${thruStr}</span>` : ''}
+        </div>
+        <div class="${earnCls}">${dropped ? `<del>${earnStr}</del>` : earnStr}</div>
+      </div>
+      ${bodyHtml}
+    </div>`;
+  }).join('');
+}
+
+// ── Summary table ─────────────────────────────────────────────────────────────
+
+function renderSummaryTable(golfers) {
+  const sgCols = ['sg_putt','sg_arg','sg_app','sg_ott','sg_t2g','sg_total'];
+  const sgHdrs = ['SG Putt','SG ARG','SG APP','SG OTT','SG T2G','SG Tot'];
+  const table = document.getElementById('summaryTable');
+  const ths = ['Pos','Golfer','Score','Today','Thru',...sgHdrs,'Earnings']
+    .map((h,i) => `<th${i >= 5 ? ' class="th-r"' : ''}>${h}</th>`).join('');
+
+  const rows = golfers.map(g => {
+    const inactive = g.status && g.status !== 'active';
+    const dropped  = !!g.dropped;
+    const rowCls   = dropped ? 'tr-dropped' : inactive ? 'tr-inactive' : '';
+    const sgCells  = sgCols.map(k => {
+      const v = g.sg ? g.sg[k] : null;
+      if (v == null) return `<td style="text-align:right;color:var(--text-muted)">—</td>`;
+      const cls = v >= 0 ? 'score-neg' : 'score-pos';
+      return `<td class="${cls}" style="font-family:'DM Mono',monospace;font-size:12px;font-weight:600;text-align:right">${v >= 0 ? '+' : ''}${v.toFixed(2)}</td>`;
+    }).join('');
+    return `<tr class="${rowCls}">
+      <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text-muted)">${esc(String(g.position||'—'))}</td>
+      <td style="font-weight:600;min-width:140px">${dropped ? `<del>${esc(g.name)}</del>` : esc(g.name)}</td>
+      <td class="${scoreClass(g.score)}" style="font-family:'DM Mono',monospace;font-weight:700;text-align:right">${esc(g.score||'—')}</td>
+      <td class="${scoreClass(g.today)}" style="font-family:'DM Mono',monospace;text-align:right">${esc(g.today||'—')}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);text-align:right">${esc(String(g.thru||'—'))}</td>
+      ${sgCells}
+      <td class="money-cell" style="text-align:right">${dropped ? '—' : formatMoney(g.earnings)}</td>
+    </tr>`;
+  }).join('');
+
+  table.innerHTML = `<thead><tr>${ths}</tr></thead><tbody>${rows}</tbody>`;
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────────
+
+if (!teamName) {
+  document.getElementById('loadingState').style.display = 'none';
+  document.getElementById('errorState').style.display = '';
+  document.getElementById('errorMsg').textContent = 'No team specified.';
+} else {
+  fetch('/api/leaderboard')
+    .then(r => r.json())
+    .then(data => {
+      if (data.status === 'no_tournament') {
+        throw new Error('Tournament not yet underway — check back in April!');
+      }
+      const pool = data.poolLeaderboard || [];
+      const team = pool.find(t => t.name === teamName);
+      if (!team) throw new Error(`Team "${teamName}" not found.`);
+
+      // Build masters lookup by normalized name
+      const mastersMap = {};
+      (data.mastersLeaderboard || []).forEach(p => { mastersMap[normName(p.name)] = p; });
+
+      // Merge team golfers with masters data
+      const golfers = (team.golfers || []).map(g => {
+        const mp = mastersMap[normName(g.name)] || {};
+        return {
+          ...g,
+          sg:          mp.sg          ?? null,
+          winPct:      mp.winPct      ?? null,
+          top5Pct:     mp.top5Pct     ?? null,
+          makeCutPct:  mp.makeCutPct  ?? null,
+          ownership:   mp.ownership   ?? null,
+          // Use masters position/score/thru if richer
+          position:    g.position || mp.position,
+          thru:        g.thru     || mp.thru,
+        };
+      });
+
+      renderHero(team, pool.length);
+      renderGolferCards(golfers);
+      renderSummaryTable(golfers);
+
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('teamContent').style.display = '';
+    })
+    .catch(err => {
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('errorMsg').textContent = err.message || 'Failed to load data.';
+      document.getElementById('errorState').style.display = '';
+    });
+}
+</script>
+</body>
+</html>
