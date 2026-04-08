@@ -2,6 +2,7 @@
 
 const { getStore }           = require('@netlify/blobs');
 const { fetchLiveScores, fetchPoolEntries, fetchPayoutTable, fetchSGStats, fetchInPlayPreds,
+        fetchDGRankings, fetchPreTournamentOdds,
         applyBudgetCompliance, buildEarningsMap, computeStandings, buildMastersLeaderboard, normalizeName } = require('./lib/pool-calc');
 
 const ALLOWED_ORIGIN = process.env.URL || 'https://masters-pool.org';
@@ -83,13 +84,15 @@ function computeMovement(entryName, currentRank, snapshots) {
 
 exports.handler = async () => {
   try {
-    const [scoreData, entries, snapshots, sgMap, payoutMap, predMap] = await Promise.all([
+    const [scoreData, entries, snapshots, sgMap, payoutMap, predMap, rankingsMap, preTournMap] = await Promise.all([
       fetchLiveScores(),
       fetchPoolEntries(),
       getTodaySnapshots(),
       fetchSGStats().catch(e => { console.warn('SG fetch failed:', e.message); return {}; }),
       fetchPayoutTable().catch(e => { console.warn('Payout table failed, using hardcoded PURSE:', e.message); return {}; }),
       fetchInPlayPreds().catch(e => { console.warn('In-play preds failed:', e.message); return {}; }),
+      fetchDGRankings().catch(e => { console.warn('DG rankings failed:', e.message); return {}; }),
+      fetchPreTournamentOdds().catch(e => { console.warn('Pre-tourney odds failed:', e.message); return {}; }),
     ]);
 
     // Apply budget compliance — marks over-budget teams' cheapest golfers as dropped
@@ -116,16 +119,24 @@ exports.handler = async () => {
     const earningsMap        = buildEarningsMap(scoreData.players, payoutMap);
     const standings          = computeStandings(entries, scoreData.players, earningsMap);
     const mastersLeaderboard = buildMastersLeaderboard(scoreData.players, earningsMap).map(p => {
-      const nameKey = normalizeName(p.name);
-      const preds   = predMap[nameKey] ?? {};
+      const nameKey  = normalizeName(p.name);
+      const preds    = predMap[nameKey]    ?? {};
+      const rankings = rankingsMap[nameKey] ?? {};
+      const preTn    = preTournMap[nameKey] ?? {};
       return {
         ...p,
-        sg:             sgMap[nameKey]   ?? null,
-        winPct:         preds.win        ?? null,
-        top5Pct:        preds.top_5      ?? null,
-        makeCutPct:     preds.make_cut   ?? null,
-        ownership:      totalTeams > 0 ? Math.round((ownershipMap[nameKey] || 0) / totalTeams * 100) : 0,
-        ownershipCount: ownershipMap[nameKey] || 0,
+        sg:              sgMap[nameKey]    ?? null,
+        winPct:          preds.win         ?? null,
+        top5Pct:         preds.top_5       ?? null,
+        makeCutPct:      preds.make_cut    ?? null,
+        dgRank:          rankings.dgRank   ?? null,
+        owgrRank:        rankings.owgrRank ?? null,
+        preTournWin:     preTn.win         ?? null,
+        preTournTop5:    preTn.top_5       ?? null,
+        preTournTop10:   preTn.top_10      ?? null,
+        preTournMakeCut: preTn.make_cut    ?? null,
+        ownership:       totalTeams > 0 ? Math.round((ownershipMap[nameKey] || 0) / totalTeams * 100) : 0,
+        ownershipCount:  ownershipMap[nameKey] || 0,
       };
     });
 

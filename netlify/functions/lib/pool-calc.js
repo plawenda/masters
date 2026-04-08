@@ -385,6 +385,55 @@ async function fetchSGStats() {
   return map;
 }
 
+// ---------- DG World Rankings (OWGR + DG rank) ----------
+
+async function fetchDGRankings() {
+  const key = process.env.DATAGOLF_API_KEY;
+  if (!key) return {};
+
+  const url = 'https://feeds.datagolf.com/preds/get-dg-rankings?file_format=json&key=' + key;
+  const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+  if (!r.ok) throw new Error(`DG rankings ${r.status}`);
+  const json = await r.json();
+
+  const map = {};
+  for (const p of (json.rankings || json.players || json.data || [])) {
+    const rawName = p.player_name || p.name || '';
+    if (!rawName) continue;
+    map[canonicalizeName(rawName)] = {
+      dgRank:   p.datagolf_rank ?? p.dg_rank ?? p.rank ?? null,
+      owgrRank: p.owgr_rank ?? p.world_ranking ?? null,
+    };
+  }
+  return map;
+}
+
+// ---------- Pre-Tournament Odds ----------
+
+async function fetchPreTournamentOdds() {
+  const key = process.env.DATAGOLF_API_KEY;
+  if (!key) return {};
+
+  const url = 'https://feeds.datagolf.com/preds/pre-tournament' +
+    '?tour=pga&dead_heat=no&odds_format=percent&file_format=json&key=' + key;
+  const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+  if (!r.ok) throw new Error(`Pre-tournament odds ${r.status}`);
+  const json = await r.json();
+
+  const map = {};
+  for (const p of (json.players || json.data || [])) {
+    const rawName = p.player_name || p.name || '';
+    if (!rawName) continue;
+    map[canonicalizeName(rawName)] = {
+      win:    p.win    ?? null,
+      top_5:  p.top_5  ?? null,
+      top_10: p.top_10 ?? null,
+      make_cut: p.make_cut ?? null,
+    };
+  }
+  return map;
+}
+
 module.exports = {
   WORKER_URL,
   WORKER_BACKUP_URL,
@@ -402,6 +451,8 @@ module.exports = {
   fetchPayoutTable,
   fetchSGStats,
   fetchInPlayPreds,
+  fetchDGRankings,
+  fetchPreTournamentOdds,
   applyBudgetCompliance,
   buildEarningsMap,
   computeStandings,

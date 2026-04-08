@@ -396,6 +396,50 @@
       font-size: 13px;
     }
 
+    /* World/DG rank chips in card header */
+    .rank-chips {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+    .rank-chip {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      font-weight: 500;
+      padding: 1px 6px;
+      border-radius: 3px;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+    .rc-owgr {
+      background: rgba(0,103,71,0.12);
+      color: var(--green);
+      border: 1px solid rgba(0,103,71,0.25);
+    }
+    .rc-dg {
+      background: rgba(200,149,42,0.12);
+      color: var(--gold);
+      border: 1px solid rgba(200,149,42,0.25);
+    }
+    [data-theme="dark"] .rc-owgr { background: rgba(0,103,71,0.22); }
+    [data-theme="dark"] .rc-dg   { background: rgba(200,149,42,0.18); }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) .rc-owgr { background: rgba(0,103,71,0.22); }
+      :root:not([data-theme="light"]) .rc-dg   { background: rgba(200,149,42,0.18); }
+    }
+
+    /* Pre-tournament odds comparison */
+    .pred-pre {
+      display: block;
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      color: var(--text-muted);
+      margin-top: 1px;
+      letter-spacing: 0.2px;
+    }
+    .pred-pre-arrow { opacity: 0.5; }
+
     /* ── Summary table ─────────────────────────────────────────────────────── */
     .summary-scroll { overflow-x: auto; }
     .summary-table {
@@ -496,12 +540,12 @@
 <div id="teamContent" style="display:none">
   <div class="team-hero" id="heroSection"></div>
   <div class="container">
-    <div class="section-head" id="golferHeading">Golfer Breakdown</div>
-    <div class="golfer-cards" id="golferCards"></div>
-    <div class="section-head" style="margin-top:32px">Team Summary</div>
+    <div class="section-head">Team Summary</div>
     <div class="summary-scroll">
       <table class="summary-table" id="summaryTable"></table>
     </div>
+    <div class="section-head" id="golferHeading" style="margin-top:32px">Golfer Breakdown</div>
+    <div class="golfer-cards" id="golferCards"></div>
   </div>
 </div>
 
@@ -637,6 +681,15 @@ function renderGolferCards(golfers) {
     const earnStr = g.earnings > 0 ? formatMoney(g.earnings) : '—';
     const earnCls = g.earnings > 0 ? 'gc-earn' : 'gc-earn earn-zero';
 
+    // ── Rank chips ──
+    const owgr   = g.owgrRank;
+    const dgRank = g.dgRank;
+    const rankChipsHtml = (owgr || dgRank) ? `
+      <div class="rank-chips">
+        ${owgr   ? `<span class="rank-chip rc-owgr">OWGR #${owgr}</span>` : ''}
+        ${dgRank ? `<span class="rank-chip rc-dg">DG #${dgRank}</span>`   : ''}
+      </div>` : '';
+
     // ── Predictions ──
     const win  = g.winPct    != null ? g.winPct    * 100 : null;
     const t5   = g.top5Pct   != null ? g.top5Pct   * 100 : null;
@@ -644,11 +697,20 @@ function renderGolferCards(golfers) {
     const own  = g.ownership != null ? g.ownership : null;
     const hasPreds = win != null || t5 != null || mc != null;
 
-    function predItem(val, lbl) {
+    // Pre-tournament odds (for comparison)
+    const preWin = g.preTournWin     != null ? g.preTournWin     * 100 : null;
+    const preT5  = g.preTournTop5    != null ? g.preTournTop5    * 100 : null;
+    const preMC  = g.preTournMakeCut != null ? g.preTournMakeCut * 100 : null;
+
+    function predItem(val, lbl, preVal) {
       const display = val != null ? val.toFixed(1) + '%' : '—';
       const cls = val != null ? predClass(val) : 'p-low';
+      const preHtml = preVal != null
+        ? `<span class="pred-pre"><span class="pred-pre-arrow">⇡</span>${preVal.toFixed(1)}% pre-tourney</span>`
+        : '';
       return `<div class="pred-item">
         <span class="pred-num ${cls}">${display}</span>
+        ${preHtml}
         <span class="pred-lbl">${lbl}</span>
       </div>`;
     }
@@ -664,10 +726,9 @@ function renderGolferCards(golfers) {
       <div class="gc-preds">
         <div class="preds-title">Predictions</div>
         <div class="preds-grid">
-          ${predItem(win, 'Win')}
-          ${predItem(t5,  'Top 5')}
-          ${predItem(mc,  'Make Cut')}
-          ${predItem(win != null ? null : null, '')}
+          ${predItem(win, 'Win',      preWin)}
+          ${predItem(t5,  'Top 5',   preT5)}
+          ${predItem(mc,  'Make Cut', preMC)}
         </div>
         ${ownBar}
         ${!hasPreds ? '<div class="pred-na">No live predictions</div>' : ''}
@@ -701,6 +762,7 @@ function renderGolferCards(golfers) {
         <div class="gc-name-cell">
           <div class="gc-name">${dropped ? `<del>${esc(g.name)}</del>` : esc(g.name)}</div>
           ${tagHtml}
+          ${rankChipsHtml}
         </div>
         <div class="gc-scores">
           <span class="gc-score-total ${scoreCls}">${esc(g.score || '—')}</span>
@@ -773,14 +835,20 @@ if (!teamName) {
         const mp = mastersMap[normName(g.name)] || {};
         return {
           ...g,
-          sg:          mp.sg          ?? null,
-          winPct:      mp.winPct      ?? null,
-          top5Pct:     mp.top5Pct     ?? null,
-          makeCutPct:  mp.makeCutPct  ?? null,
-          ownership:   mp.ownership   ?? null,
+          sg:              mp.sg              ?? null,
+          winPct:          mp.winPct          ?? null,
+          top5Pct:         mp.top5Pct         ?? null,
+          makeCutPct:      mp.makeCutPct      ?? null,
+          ownership:       mp.ownership       ?? null,
+          dgRank:          mp.dgRank          ?? null,
+          owgrRank:        mp.owgrRank        ?? null,
+          preTournWin:     mp.preTournWin     ?? null,
+          preTournTop5:    mp.preTournTop5    ?? null,
+          preTournTop10:   mp.preTournTop10   ?? null,
+          preTournMakeCut: mp.preTournMakeCut ?? null,
           // Use masters position/score/thru if richer
-          position:    g.position || mp.position,
-          thru:        g.thru     || mp.thru,
+          position:        g.position || mp.position,
+          thru:            g.thru     || mp.thru,
         };
       });
 
