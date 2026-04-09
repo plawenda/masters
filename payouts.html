@@ -11,7 +11,132 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="shared.css">
   <style>
-    .container { max-width: 600px; margin: auto; padding: 24px 20px; }
+    .container {
+      max-width: 680px;
+      margin: auto;
+      padding: 48px 20px 64px;
+    }
+
+    .page-masthead {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    .page-eyebrow {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 12px;
+    }
+    .page-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 42px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.1;
+      margin: 0 0 12px;
+    }
+    .page-subtitle {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      color: var(--text-muted);
+      font-weight: 400;
+      margin: 0;
+      line-height: 1.6;
+    }
+    .page-divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      justify-content: center;
+      margin-top: 24px;
+    }
+    .page-divider-line {
+      height: 1px;
+      width: 60px;
+      background: var(--gold);
+    }
+    .page-divider-diamond {
+      width: 6px;
+      height: 6px;
+      background: var(--gold);
+      transform: rotate(45deg);
+      flex-shrink: 0;
+    }
+
+    .payouts-table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .payouts-table-wrap table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .payouts-table-wrap thead th {
+      background: var(--green);
+      color: rgba(255,255,255,0.85);
+      padding: 13px 20px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      text-align: left;
+      border-bottom: none;
+      box-shadow: inset 0 -2px 0 var(--gold);
+    }
+    .payouts-table-wrap thead th:last-child {
+      text-align: right;
+    }
+    .payouts-table-wrap tbody td {
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      color: var(--text);
+    }
+    .payouts-table-wrap tbody tr:last-child td { border-bottom: none; }
+    .payouts-table-wrap tbody tr:hover { background: var(--green-dim); }
+    .payouts-table-wrap tbody tr:first-child {
+      background: var(--gold-dim);
+    }
+    .payouts-table-wrap tbody tr:first-child:hover {
+      background: rgba(184,151,46,0.2);
+    }
+
+    .pos-cell {
+      font-family: 'DM Mono', monospace;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-muted);
+      width: 100px;
+    }
+    .payouts-table-wrap tbody tr:first-child .pos-cell {
+      color: var(--gold);
+      font-size: 15px;
+    }
+    .pct-cell {
+      font-family: 'DM Mono', monospace;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+      font-weight: 600;
+      color: var(--green);
+    }
+
+    .footnote {
+      margin-top: 24px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+      line-height: 1.6;
+    }
   </style>
 </head>
 <body>
@@ -19,7 +144,6 @@
 <header style="position:relative">
   <img class="logo" src="masters_pool_logo.png" alt="Masters Pool Logo">
   <div class="site-title">Masters Pool</div>
-  
   <div class="site-subtitle">Augusta National · <span id="year"></span></div>
   <button class="theme-toggle" aria-label="Toggle colour theme"><span class="tt-icon">☀</span><span class="tt-label">Light</span></button>
 </header>
@@ -36,57 +160,65 @@
 
 
 <div class="container">
-  <div class="card">
-    <div class="card-header">
-      <div class="card-title">Pool Payouts</div>
+
+  <div class="page-masthead">
+    <div class="page-eyebrow">1,138 Teams</div>
+    <h1 class="page-title">Pool Payouts</h1>
+    <p class="page-subtitle">How the pool is divided among the top finishers. Your team&rsquo;s total is the sum of all prize money your golfers earn at Augusta &mdash; the teams with the highest totals split the pot.</p>
+    <div class="page-divider">
+      <div class="page-divider-line"></div>
+      <div class="page-divider-diamond"></div>
+      <div class="page-divider-line"></div>
     </div>
-    <table id="payoutsTable"></table>
   </div>
+
+  <div class="payouts-table-wrap">
+    <table id="payoutsTable">
+      <thead>
+        <tr>
+          <th>Position</th>
+          <th style="text-align:right">Payout</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td colspan="2" style="text-align:center;padding:32px 20px;color:var(--text-muted);font-style:italic;">Loading payouts&hellip;</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="footnote">Payouts are a percentage of the total pool. Ties at any position split the combined payout evenly.</p>
+
 </div>
 
 <script src="shared.js"></script>
 <script>
-function loadTSV(url, tableId) {
-  return fetch(url)
-    .then(response => {
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return response.text();
-    })
-    .then(data => {
-      const rows = data.trim().split('\n').map(r => r.split('\t'));
-      const headers = rows[0];
-      const table = document.getElementById(tableId);
-      const thead = document.createElement('thead');
-      const headerRow = document.createElement('tr');
-      headers.forEach(h => {
-        const th = document.createElement('th');
-        th.textContent = h;
-        headerRow.appendChild(th);
-      });
-      thead.appendChild(headerRow);
-      table.innerHTML = '';
-      table.appendChild(thead);
-      const tbody = document.createElement('tbody');
-      rows.slice(1).forEach(row => {
-        const tr = document.createElement('tr');
-        row.forEach((cell, j) => {
-          const td = document.createElement('td');
-          if (j === 1) {
-            const val = parseFloat(cell);
-            td.textContent = isNaN(val) ? cell : `${val.toFixed(1)}%`;
-          } else {
-            td.textContent = cell;
-          }
-          tr.appendChild(td);
-        });
-        tbody.appendChild(tr);
-      });
-      table.appendChild(tbody);
-    });
-}
-
 const payoutsUrl = "/api/sheet?url=" + encodeURIComponent("https://docs.google.com/spreadsheets/d/e/2PACX-1vT_htvNiJZPFTNohWOu_fT0VjKlQQWfMFEi08SU1tlN3HHauBbe-I5O3KPbwc-WPkBR8Hdh5yEMssOl/pub?gid=1012228973&single=true&output=tsv");
-loadTSV(payoutsUrl, 'payoutsTable').catch(() => {});
+
+fetch(payoutsUrl)
+  .then(r => { if (!r.ok) throw new Error(); return r.text(); })
+  .then(data => {
+    const rows = data.trim().split('\n').map(r => r.split('\t').map(c => c.trim()));
+    const hdrs = rows[0].map(h => h.toLowerCase());
+
+    // Find position column and percentage column, skip any dollar columns
+    const posCol = hdrs.findIndex(h => h.includes('place') || h.includes('position') || h.includes('rank') || h.includes('pos'));
+    const pctCol = hdrs.findIndex(h => h.includes('%') || h.includes('pct') || h.includes('percent') || h.includes('payout'));
+
+    const tbody = document.querySelector('#payoutsTable tbody');
+    tbody.innerHTML = rows.slice(1).map(row => {
+      const pos = row[posCol >= 0 ? posCol : 0] || '';
+      let pct = '';
+      if (pctCol >= 0 && row[pctCol]) {
+        const val = parseFloat(row[pctCol]);
+        pct = isNaN(val) ? row[pctCol] : val.toFixed(1) + '%';
+      }
+      return `<tr><td class="pos-cell">${esc(pos)}</td><td class="pct-cell">${esc(pct)}</td></tr>`;
+    }).join('');
+  })
+  .catch(() => {
+    document.querySelector('#payoutsTable tbody').innerHTML =
+      '<tr><td colspan="2" style="text-align:center;padding:24px 20px;color:var(--text-muted);">Unable to load payouts. Try refreshing.</td></tr>';
+  });
 </script>
 </body>
 </html>

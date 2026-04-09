@@ -189,7 +189,7 @@ function renderCosts() {
       : '';
     return `<tr${rowStyle}>
       <td class="td-name">${esc(g.name)}${statusBadge}</td>
-      <td class="money-cell">$${g.cost.toFixed(1)}</td>
+      <td class="money-cell">$${g.cost.toFixed(2)}</td>
       <td class="td-r" style="color:var(--text-muted);font-size:12px">${posCell}</td>
       <td class="td-r ${scoreClass(g.score || '')}">${scoreCell}</td>
       <td class="td-r col-optional ${scoreClass(g.today || '')}">${todayCell}</td>

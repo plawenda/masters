@@ -11,7 +11,129 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="shared.css">
   <style>
-    .container { max-width: 600px; margin: auto; padding: 24px 20px; }
+    .container {
+      max-width: 680px;
+      margin: auto;
+      padding: 48px 20px 64px;
+    }
+
+    .page-masthead {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    .page-eyebrow {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 12px;
+    }
+    .page-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 42px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.1;
+      margin: 0 0 12px;
+    }
+    .page-subtitle {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      color: var(--text-muted);
+      font-weight: 400;
+      margin: 0;
+      line-height: 1.6;
+    }
+    .page-divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      justify-content: center;
+      margin-top: 24px;
+    }
+    .page-divider-line {
+      height: 1px;
+      width: 60px;
+      background: var(--gold);
+    }
+    .page-divider-diamond {
+      width: 6px;
+      height: 6px;
+      background: var(--gold);
+      transform: rotate(45deg);
+      flex-shrink: 0;
+    }
+
+    .prizes-table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .prizes-table-wrap table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .prizes-table-wrap thead th {
+      background: var(--green);
+      color: rgba(255,255,255,0.85);
+      padding: 13px 20px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      text-align: left;
+      border-bottom: none;
+      box-shadow: inset 0 -2px 0 var(--gold);
+    }
+    .prizes-table-wrap tbody td {
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      color: var(--text);
+    }
+    .prizes-table-wrap tbody tr:last-child td { border-bottom: none; }
+    .prizes-table-wrap tbody tr:hover { background: var(--green-dim); }
+    .prizes-table-wrap tbody tr:first-child {
+      background: var(--gold-dim);
+    }
+    .prizes-table-wrap tbody tr:first-child:hover {
+      background: rgba(184,151,46,0.2);
+    }
+
+    .pos-cell {
+      font-family: 'DM Mono', monospace;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-muted);
+      width: 100px;
+    }
+    .prizes-table-wrap tbody tr:first-child .pos-cell {
+      color: var(--gold);
+      font-size: 15px;
+    }
+    .money-col {
+      font-family: 'DM Mono', monospace;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+      font-weight: 600;
+      color: var(--green);
+    }
+
+    .footnote {
+      margin-top: 24px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+      line-height: 1.6;
+    }
   </style>
 </head>
 <body>
@@ -19,7 +141,6 @@
 <header style="position:relative">
   <img class="logo" src="masters_pool_logo.png" alt="Masters Pool Logo">
   <div class="site-title">Masters Pool</div>
-  
   <div class="site-subtitle">Augusta National · <span id="year"></span></div>
   <button class="theme-toggle" aria-label="Toggle colour theme"><span class="tt-icon">☀</span><span class="tt-label">Light</span></button>
 </header>
@@ -36,53 +157,75 @@
 
 
 <div class="container">
-  <div class="card">
-    <div class="card-header">
-      <div class="card-title">Prize Money</div>
+
+  <div class="page-masthead">
+    <div class="page-eyebrow">Augusta National</div>
+    <h1 class="page-title">Prize Money</h1>
+    <p class="page-subtitle">Official Masters Tournament purse distribution. Your team&rsquo;s score is the combined prize money earned by your golfers.</p>
+    <div class="page-divider">
+      <div class="page-divider-line"></div>
+      <div class="page-divider-diamond"></div>
+      <div class="page-divider-line"></div>
     </div>
-    <table id="prizeMoney"></table>
   </div>
+
+  <div class="prizes-table-wrap">
+    <table id="prizeMoney">
+      <thead>
+        <tr></tr>
+      </thead>
+      <tbody>
+        <tr><td colspan="4" style="text-align:center;padding:32px 20px;color:var(--text-muted);font-style:italic;">Loading prize money&hellip;</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="footnote">Ties split the combined prize money for the positions involved. Missed cuts pay nothing.</p>
+
 </div>
 
 <script src="shared.js"></script>
 <script>
-function loadTSV(url, tableId, moneyColumnNames = []) {
-  return fetch(url)
-    .then(response => {
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return response.text();
-    })
-    .then(data => {
-      const rows = data.trim().split('\n').map(r => r.split('\t'));
-      const headers = rows[0];
-      const moneyIndices = headers.map((h, i) => moneyColumnNames.some(name => h.trim().toLowerCase().includes(name.toLowerCase())) ? i : -1).filter(i => i !== -1);
-      const table = document.getElementById(tableId);
-      const thead = document.createElement('thead');
-      const headerRow = document.createElement('tr');
-      headers.forEach(h => {
-        const th = document.createElement('th');
-        th.textContent = h;
-        headerRow.appendChild(th);
-      });
-      thead.appendChild(headerRow);
-      table.innerHTML = '';
-      table.appendChild(thead);
-      const tbody = document.createElement('tbody');
-      rows.slice(1).forEach(row => {
-        const tr = document.createElement('tr');
-        row.forEach((cell, j) => {
-          const td = document.createElement('td');
-          td.textContent = moneyIndices.includes(j) ? formatMoney(cell) : cell;
-          tr.appendChild(td);
-        });
-        tbody.appendChild(tr);
-      });
-      table.appendChild(tbody);
-    });
-}
-
 const prizesUrl = "/api/sheet?url=" + encodeURIComponent("https://docs.google.com/spreadsheets/d/e/2PACX-1vT_htvNiJZPFTNohWOu_fT0VjKlQQWfMFEi08SU1tlN3HHauBbe-I5O3KPbwc-WPkBR8Hdh5yEMssOl/pub?gid=206557939&single=true&output=tsv");
-loadTSV(prizesUrl, 'prizeMoney', ['prize', 'money', 'purse', 'amount', 'earn']).catch(() => {});
+
+fetch(prizesUrl)
+  .then(r => { if (!r.ok) throw new Error(); return r.text(); })
+  .then(data => {
+    const rows = data.trim().split('\n').map(r => r.split('\t').map(c => c.trim()));
+    const headers = rows[0];
+
+    // Identify money columns by header name
+    const moneyKeywords = ['prize', 'money', 'purse', 'amount', 'earn'];
+    const moneyIndices = headers.map((h, i) =>
+      moneyKeywords.some(k => h.toLowerCase().includes(k)) ? i : -1
+    ).filter(i => i !== -1);
+
+    // Build header
+    const thead = document.querySelector('#prizeMoney thead tr');
+    thead.innerHTML = headers.map((h, i) => {
+      const isMoney = moneyIndices.includes(i);
+      return `<th${isMoney ? ' style="text-align:right"' : ''}>${esc(h)}</th>`;
+    }).join('');
+
+    // Build body
+    const tbody = document.querySelector('#prizeMoney tbody');
+    tbody.innerHTML = rows.slice(1).map(row => {
+      return '<tr>' + row.map((cell, j) => {
+        if (moneyIndices.includes(j)) {
+          const num = parseFloat(String(cell).replace(/[^\d.-]/g, ''));
+          const formatted = isNaN(num) ? esc(cell) : '$' + Math.round(num).toLocaleString('en-US');
+          return `<td class="money-col">${formatted}</td>`;
+        }
+        // First column = position
+        if (j === 0) return `<td class="pos-cell">${esc(cell)}</td>`;
+        return `<td>${esc(cell)}</td>`;
+      }).join('') + '</tr>';
+    }).join('');
+  })
+  .catch(() => {
+    document.querySelector('#prizeMoney tbody').innerHTML =
+      '<tr><td colspan="4" style="text-align:center;padding:24px 20px;color:var(--text-muted);">Unable to load prize money. Try refreshing.</td></tr>';
+  });
 </script>
 </body>
 </html>
