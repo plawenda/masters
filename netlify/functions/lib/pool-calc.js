@@ -29,6 +29,17 @@ const INACTIVE_STATUSES = new Set(['CUT', 'WD', 'DQ', 'MDF', 'W/D']);
 
 // ---------- Helpers ----------
 
+async function fetchWithRetry(url, opts = {}, retries = 2) {
+  for (let i = 0; i <= retries; i++) {
+    const r = await fetch(url, { signal: AbortSignal.timeout(8000), ...opts });
+    if (r.status === 429 && i < retries) {
+      await new Promise(ok => setTimeout(ok, 1000 * (i + 1)));
+      continue;
+    }
+    return r;
+  }
+}
+
 function normalizeName(name) {
   return name
     .toLowerCase()
@@ -339,7 +350,7 @@ async function fetchInPlayPreds() {
   const url = 'https://feeds.datagolf.com/preds/in-play' +
     '?tour=pga&dead_heat=no&odds_format=percent&key=' + key;
 
-  const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+  const r = await fetchWithRetry(url);
   if (!r.ok) throw new Error(`In-play preds ${r.status}`);
   const json = await r.json();
 
@@ -366,7 +377,7 @@ async function fetchSGStats() {
     '?stats=sg_putt,sg_arg,sg_app,sg_ott,sg_t2g,sg_total' +
     '&round=event_cumulative&display=value&file_format=json&key=' + key;
 
-  const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+  const r = await fetchWithRetry(url);
   if (!r.ok) throw new Error(`SG stats ${r.status}`);
   const json = await r.json();
 
@@ -394,7 +405,7 @@ async function fetchDGRankings() {
   if (!key) return {};
 
   const url = 'https://feeds.datagolf.com/preds/get-dg-rankings?file_format=json&key=' + key;
-  const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+  const r = await fetchWithRetry(url);
   if (!r.ok) throw new Error(`DG rankings ${r.status}`);
   const json = await r.json();
 
@@ -418,7 +429,7 @@ async function fetchPreTournamentOdds() {
 
   const url = 'https://feeds.datagolf.com/preds/pre-tournament' +
     '?tour=pga&dead_heat=no&odds_format=percent&file_format=json&key=' + key;
-  const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+  const r = await fetchWithRetry(url);
   if (!r.ok) throw new Error(`Pre-tournament odds ${r.status}`);
   const json = await r.json();
 

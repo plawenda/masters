@@ -86,16 +86,19 @@ function computeMovement(entryName, currentRank, snapshots) {
 exports.handler = async (event) => {
   if (event.blobs) connectLambda(event);
   try {
-    const [scoreData, entries, snapshots, sgMap, payoutMap, predMap, rankingsMap, preTournMap] = await Promise.all([
+    // Core data (parallel — different services)
+    const [scoreData, entries, snapshots, payoutMap] = await Promise.all([
       fetchLiveScores(),
       fetchPoolEntries(),
       getTodaySnapshots(),
-      fetchSGStats().catch(e => { console.warn('SG fetch failed:', e.message); return {}; }),
       fetchPayoutTable().catch(e => { console.warn('Payout table failed, using hardcoded PURSE:', e.message); return {}; }),
-      fetchInPlayPreds().catch(e => { console.warn('In-play preds failed:', e.message); return {}; }),
-      fetchDGRankings().catch(e => { console.warn('DG rankings failed:', e.message); return {}; }),
-      fetchPreTournamentOdds().catch(e => { console.warn('Pre-tourney odds failed:', e.message); return {}; }),
     ]);
+
+    // DataGolf calls (sequential — same API key, avoids 429 rate limits)
+    const sgMap       = await fetchSGStats().catch(e =>       { console.warn('SG fetch failed:', e.message); return {}; });
+    const predMap     = await fetchInPlayPreds().catch(e =>    { console.warn('In-play preds failed:', e.message); return {}; });
+    const rankingsMap = await fetchDGRankings().catch(e =>     { console.warn('DG rankings failed:', e.message); return {}; });
+    const preTournMap = await fetchPreTournamentOdds().catch(e => { console.warn('Pre-tourney odds failed:', e.message); return {}; });
 
     // Apply budget compliance — marks over-budget teams' cheapest golfers as dropped
     applyBudgetCompliance(entries);
