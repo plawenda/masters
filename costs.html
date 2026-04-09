@@ -80,8 +80,154 @@
     .bc-info { background: rgba(0,103,71,0.1); color: var(--green); border: 1px solid rgba(0,103,71,0.2); }
     .bc-tip  { background: var(--gold-dim); color: var(--gold); border: 1px solid rgba(200,149,42,0.2); }
 
+    /* Ownership column */
+    .td-own {
+      text-align: right;
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      width: 72px;
+    }
+
+    /* Selectable rows */
+    #costsTable tbody tr { cursor: pointer; }
+    #costsTable tbody tr.is-picked {
+      background: var(--green-dim);
+    }
+    #costsTable tbody tr.is-picked td:first-child {
+      border-left: 3px solid var(--green);
+      padding-left: 9px;
+    }
+    #costsTable tbody tr.is-picked:hover {
+      background: var(--green-mid);
+    }
+
+    /* ── Team builder sticky panel ─────────────────────────────────────────────── */
+    .team-builder {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border-top: 2px solid var(--gold);
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.12);
+      z-index: 100;
+      transform: translateY(100%);
+      transition: transform 0.25s ease;
+    }
+    .team-builder.is-visible { transform: translateY(0); }
+    .tb-inner {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 12px 20px;
+    }
+    .tb-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .tb-label {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .tb-total {
+      font-family: 'DM Mono', monospace;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--green);
+      transition: color 0.2s;
+    }
+    .tb-total.over-budget { color: #dc2626; }
+    .tb-count {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .tb-count.at-limit { color: var(--gold); font-weight: 600; }
+    .tb-count.over-limit { color: #dc2626; font-weight: 600; }
+    .tb-budget-bar {
+      flex: 1;
+      min-width: 80px;
+      height: 6px;
+      background: var(--surface2);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .tb-budget-fill {
+      height: 100%;
+      background: var(--green);
+      border-radius: 3px;
+      transition: width 0.25s ease, background 0.25s ease;
+    }
+    .tb-budget-fill.over { background: #dc2626; }
+    .tb-clear {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 12px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+      flex-shrink: 0;
+    }
+    .tb-clear:hover { color: #dc2626; border-color: #dc2626; }
+    .tb-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .tb-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      background: var(--green-dim);
+      border: 1px solid rgba(0,103,71,0.2);
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .tb-chip:hover { background: rgba(220,38,38,0.08); border-color: rgba(220,38,38,0.3); }
+    .tb-chip-cost {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .tb-chip-x {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-left: 2px;
+    }
+    .tb-over-msg {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      color: #dc2626;
+      font-weight: 600;
+      margin-top: 6px;
+    }
+
+    /* Make room for sticky panel when visible */
+    body.tb-active { padding-bottom: 120px; }
+
     @media (max-width: 600px) {
       .col-optional { display: none; }
+      .tb-inner { padding: 10px 14px; }
+      .tb-total { font-size: 16px; }
     }
   </style>
 </head>
@@ -112,7 +258,7 @@
     </div>
     <div class="budget-bar">
       <span class="budget-chip bc-info">$30 budget per team · max 10 golfers</span>
-      <span class="budget-chip bc-tip">💡 Click any column header to sort</span>
+      <span class="budget-chip bc-tip">💡 Click a row to build your team</span>
     </div>
     <div class="costs-toolbar">
       <input type="search" id="costsSearch" placeholder="Search golfers…" class="costs-search" autocomplete="off">
@@ -129,17 +275,33 @@
             <th class="col-optional" style="text-align:right;width:58px">Today</th>
             <th class="col-optional sort-th" data-sort="winPct" style="text-align:right;width:68px">Win % <span class="sort-icon">↕</span></th>
             <th class="col-optional sort-th" data-sort="owgr" style="text-align:right;width:72px">OWGR <span class="sort-icon">↕</span></th>
+            <th class="sort-th" data-sort="ownership" style="text-align:right;width:72px">Pool % <span class="sort-icon">↕</span></th>
           </tr>
         </thead>
         <tbody id="costsBody">
-          <tr><td colspan="7"><span class="skel" style="width:80%"></span></td></tr>
-          <tr><td colspan="7"><span class="skel" style="width:65%"></span></td></tr>
-          <tr><td colspan="7"><span class="skel" style="width:72%"></span></td></tr>
-          <tr><td colspan="7"><span class="skel" style="width:58%"></span></td></tr>
-          <tr><td colspan="7"><span class="skel" style="width:88%"></span></td></tr>
+          <tr><td colspan="8"><span class="skel" style="width:80%"></span></td></tr>
+          <tr><td colspan="8"><span class="skel" style="width:65%"></span></td></tr>
+          <tr><td colspan="8"><span class="skel" style="width:72%"></span></td></tr>
+          <tr><td colspan="8"><span class="skel" style="width:58%"></span></td></tr>
+          <tr><td colspan="8"><span class="skel" style="width:88%"></span></td></tr>
         </tbody>
       </table>
     </div>
+  </div>
+</div>
+
+<!-- Team Builder panel -->
+<div class="team-builder" id="teamBuilder">
+  <div class="tb-inner">
+    <div class="tb-top">
+      <span class="tb-label">Your Team</span>
+      <span class="tb-total" id="tbTotal">$0.00</span>
+      <span class="tb-count" id="tbCount">0/10 golfers</span>
+      <div class="tb-budget-bar"><div class="tb-budget-fill" id="tbFill" style="width:0%"></div></div>
+      <button class="tb-clear" id="tbClear">Clear</button>
+    </div>
+    <div class="tb-chips" id="tbChips"></div>
+    <div class="tb-over-msg" id="tbOverMsg" style="display:none"></div>
   </div>
 </div>
 
@@ -148,6 +310,9 @@
 let costsData  = [];
 let sortField  = 'cost';
 let sortDir    = 1; // 1 = ascending
+const pickedSet = new Set(); // golfer names on the team
+const BUDGET = 30;
+const MAX_GOLFERS = 10;
 
 function normName(s) {
   return s.toLowerCase()
@@ -182,12 +347,15 @@ function renderCosts() {
     const todayCell = g.today != null ? esc(String(g.today)) : '—';
     const winCell   = g.winPct != null ? g.winPct.toFixed(1) + '%' : '—';
     const owgrCell  = g.owgr  != null ? '#' + g.owgr          : '—';
+    const ownCell   = g.ownership != null ? g.ownership + '%' : '—';
     const inactive  = g.status && g.status !== 'active';
-    const rowStyle  = inactive ? ' class="td-status-inactive"' : '';
+    const picked    = pickedSet.has(g.name);
+    const classes   = [inactive ? 'td-status-inactive' : '', picked ? 'is-picked' : ''].filter(Boolean).join(' ');
+    const rowAttr   = classes ? ` class="${classes}"` : '';
     const statusBadge = inactive
       ? ` <span style="font-size:9px;font-family:'DM Sans',sans-serif;font-weight:600;padding:1px 5px;border-radius:3px;background:#fee2e2;color:#991b1b;text-transform:uppercase">${esc(g.status)}</span>`
       : '';
-    return `<tr${rowStyle}>
+    return `<tr${rowAttr} data-golfer="${esc(g.name)}">
       <td class="td-name">${esc(g.name)}${statusBadge}</td>
       <td class="money-cell">$${g.cost.toFixed(2)}</td>
       <td class="td-r" style="color:var(--text-muted);font-size:12px">${posCell}</td>
@@ -195,6 +363,7 @@ function renderCosts() {
       <td class="td-r col-optional ${scoreClass(g.today || '')}">${todayCell}</td>
       <td class="td-r col-optional" style="${winPctStyle(g.winPct)}">${winCell}</td>
       <td class="td-r col-optional" style="color:var(--text-muted)">${owgrCell}</td>
+      <td class="td-own">${ownCell}</td>
     </tr>`;
   }).join('');
 
@@ -207,6 +376,76 @@ function renderCosts() {
     th.classList.toggle('sorted-asc',  active && sortDir ===  1);
     th.classList.toggle('sorted-desc', active && sortDir === -1);
   });
+
+  // Wire row clicks
+  document.querySelectorAll('#costsBody tr[data-golfer]').forEach(tr => {
+    tr.addEventListener('click', () => {
+      const name = tr.dataset.golfer;
+      if (pickedSet.has(name)) pickedSet.delete(name);
+      else pickedSet.add(name);
+      renderCosts();
+      renderTeamBuilder();
+    });
+  });
+}
+
+function renderTeamBuilder() {
+  const panel = document.getElementById('teamBuilder');
+  const picked = costsData.filter(g => pickedSet.has(g.name));
+  const total = picked.reduce((s, g) => s + g.cost, 0);
+  const count = picked.length;
+  const over = total > BUDGET;
+  const overCount = count > MAX_GOLFERS;
+
+  // Show/hide panel
+  const visible = count > 0;
+  panel.classList.toggle('is-visible', visible);
+  document.body.classList.toggle('tb-active', visible);
+  if (!visible) return;
+
+  // Total
+  const totalEl = document.getElementById('tbTotal');
+  totalEl.textContent = '$' + total.toFixed(2);
+  totalEl.classList.toggle('over-budget', over);
+
+  // Count
+  const countEl = document.getElementById('tbCount');
+  countEl.textContent = `${count}/${MAX_GOLFERS} golfers`;
+  countEl.classList.toggle('at-limit', count === MAX_GOLFERS);
+  countEl.classList.toggle('over-limit', overCount);
+
+  // Budget bar
+  const pct = Math.min((total / BUDGET) * 100, 105);
+  const fill = document.getElementById('tbFill');
+  fill.style.width = pct + '%';
+  fill.classList.toggle('over', over);
+
+  // Chips — sorted by cost descending
+  const sorted = [...picked].sort((a, b) => b.cost - a.cost);
+  document.getElementById('tbChips').innerHTML = sorted.map(g =>
+    `<span class="tb-chip" data-remove="${esc(g.name)}">${esc(g.name)} <span class="tb-chip-cost">$${g.cost.toFixed(2)}</span><span class="tb-chip-x">✕</span></span>`
+  ).join('');
+
+  // Chip remove clicks
+  document.querySelectorAll('.tb-chip[data-remove]').forEach(chip => {
+    chip.addEventListener('click', () => {
+      pickedSet.delete(chip.dataset.remove);
+      renderCosts();
+      renderTeamBuilder();
+    });
+  });
+
+  // Over-budget message
+  const msgEl = document.getElementById('tbOverMsg');
+  if (over || overCount) {
+    const parts = [];
+    if (over) parts.push(`$${(total - BUDGET).toFixed(2)} over the $${BUDGET} budget`);
+    if (overCount) parts.push(`${count - MAX_GOLFERS} golfer${count - MAX_GOLFERS > 1 ? 's' : ''} over the limit of ${MAX_GOLFERS}`);
+    msgEl.textContent = parts.join(' · ');
+    msgEl.style.display = '';
+  } else {
+    msgEl.style.display = 'none';
+  }
 }
 
 // ── Load costs TSV + live enrichment ──────────────────────────────────────────
@@ -241,12 +480,13 @@ Promise.allSettled([
       const live = liveMap[normName(g.name)] || {};
       return {
         ...g,
-        pos:    live.position ?? null,
-        score:  live.score    ?? null,
-        today:  live.today    ?? null,
-        winPct: live.winPct   != null ? live.winPct * 100 : null,
-        owgr:   live.owgrRank ?? null,
-        status: live.status   ?? null,
+        pos:       live.position       ?? null,
+        score:     live.score          ?? null,
+        today:     live.today          ?? null,
+        winPct:    live.winPct   != null ? live.winPct * 100 : null,
+        owgr:      live.owgrRank       ?? null,
+        status:    live.status         ?? null,
+        ownership: live.ownership      ?? null,
       };
     });
     document.getElementById('costsLiveBadge').style.display = '';
@@ -267,6 +507,12 @@ document.querySelectorAll('#costsTable .sort-th').forEach(th => {
     else { sortField = f; sortDir = f === 'name' ? 1 : 1; }
     renderCosts();
   });
+});
+
+document.getElementById('tbClear').addEventListener('click', () => {
+  pickedSet.clear();
+  renderCosts();
+  renderTeamBuilder();
 });
 </script>
 </body>
