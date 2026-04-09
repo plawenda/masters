@@ -4,11 +4,12 @@
 // Computes current standings and appends a snapshot to Netlify Blobs
 // for use by leaderboard.js to power daily movement & sparkline features.
 
-const { getStore }    = require('@netlify/blobs');
+const { getStore, connectLambda } = require('@netlify/blobs');
 const { fetchLiveScores, fetchPoolEntries,
         buildEarningsMap, computeStandings } = require('./lib/pool-calc');
 
-exports.handler = async () => {
+exports.handler = async (event) => {
+  if (event.blobs) connectLambda(event);
   try {
     const [scoreData, entries] = await Promise.all([
       fetchLiveScores(),

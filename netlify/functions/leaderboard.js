@@ -1,6 +1,6 @@
 'use strict';
 
-const { getStore }           = require('@netlify/blobs');
+const { getStore, connectLambda } = require('@netlify/blobs');
 const { fetchLiveScores, fetchPoolEntries, fetchPayoutTable, fetchSGStats, fetchInPlayPreds,
         fetchDGRankings, fetchPreTournamentOdds,
         applyBudgetCompliance, buildEarningsMap, computeStandings, buildMastersLeaderboard, normalizeName } = require('./lib/pool-calc');
@@ -83,7 +83,8 @@ function computeMovement(entryName, currentRank, snapshots) {
 
 // ---------- Handler ----------
 
-exports.handler = async () => {
+exports.handler = async (event) => {
+  if (event.blobs) connectLambda(event);
   try {
     const [scoreData, entries, snapshots, sgMap, payoutMap, predMap, rankingsMap, preTournMap] = await Promise.all([
       fetchLiveScores(),
