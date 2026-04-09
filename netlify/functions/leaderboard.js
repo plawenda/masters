@@ -43,7 +43,8 @@ async function maybeWriteSnapshot(standings, existingSnapshots) {
       time: new Date().toISOString(),
       standings: standings.map(e => ({ name: e.name, rank: e.rank, totalEarnings: e.totalEarnings })),
     };
-    const updated = [...existingSnapshots, snapshot].slice(-200);
+    existingSnapshots.push(snapshot);
+    const updated = existingSnapshots.slice(-200);
     await store.set(key, JSON.stringify(updated));
     console.log(`[leaderboard] On-demand snapshot saved: ${snapshot.time}, ${standings.length} teams`);
   } catch (e) {
@@ -141,7 +142,7 @@ exports.handler = async () => {
     });
 
     // Write a snapshot if none exists recently (fallback for unreliable cron)
-    maybeWriteSnapshot(standings, snapshots);
+    await maybeWriteSnapshot(standings, snapshots);
 
     // Attach movement stats to each team
     const poolLeaderboard = standings.map(entry => ({
