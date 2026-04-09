@@ -32,6 +32,8 @@ const INACTIVE_STATUSES = new Set(['CUT', 'WD', 'DQ', 'MDF', 'W/D']);
 function normalizeName(name) {
   return name
     .toLowerCase()
+    .replace(/ø/g, 'o').replace(/æ/g, 'ae').replace(/å/g, 'a')
+    .replace(/ð/g, 'd').replace(/þ/g, 'th').replace(/ß/g, 'ss')
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9 ]/g, '')
     .replace(/\s+/g, ' ')

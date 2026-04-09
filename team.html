@@ -559,6 +559,8 @@ document.title = teamName ? `${teamName} — Masters Pool` : 'Team Spotlight —
 
 function normName(s) {
   return s.toLowerCase()
+    .replace(/ø/g, 'o').replace(/æ/g, 'ae').replace(/å/g, 'a')
+    .replace(/ð/g, 'd').replace(/þ/g, 'th').replace(/ß/g, 'ss')
     .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
     .replace(/[^a-z0-9 ]/g,'')
     .replace(/\s+/g,' ').trim();
