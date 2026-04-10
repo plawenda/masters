@@ -11,6 +11,25 @@ const { fetchLiveScores, fetchPoolEntries,
 exports.handler = async (event) => {
   if (event.blobs) connectLambda(event);
   try {
+    // Time window check — only snapshot during tournament hours (ET)
+    const now = new Date();
+    const et = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+    const hour = et.getHours();
+    const day = et.getDay(); // 0=Sun, 5=Fri, 6=Sat
+
+    if (hour >= 20) {
+      console.log('Past 8 PM ET — snapshot skipped.');
+      return { statusCode: 200, body: 'outside_window' };
+    }
+    if (day === 5 && hour < 8) {
+      console.log('Before 8 AM ET on Friday — snapshot skipped.');
+      return { statusCode: 200, body: 'outside_window' };
+    }
+    if ((day === 6 || day === 0) && hour < 10) {
+      console.log('Before 10 AM ET on weekend — snapshot skipped.');
+      return { statusCode: 200, body: 'outside_window' };
+    }
+
     const [scoreData, entries] = await Promise.all([
       fetchLiveScores(),
       fetchPoolEntries(),
