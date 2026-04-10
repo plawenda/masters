@@ -197,12 +197,14 @@
     .gc-tag-active   { background: rgba(0,103,71,0.12); color: var(--green); }
     .gc-tag-cut      { background: #fee2e2; color: #991b1b; }
     .gc-tag-wd       { background: #fef3c7; color: #92400e; }
-    .gc-tag-dropped  { background: var(--surface2); color: var(--text-muted); }
-    [data-theme="dark"] .gc-tag-cut { background: rgba(220,38,38,0.2); color: #f87171; }
-    [data-theme="dark"] .gc-tag-wd  { background: rgba(217,119,6,0.2); color: #fbbf24; }
+    .gc-tag-dropped  { background: #fef9c3; color: #854d0e; }
+    [data-theme="dark"] .gc-tag-cut     { background: rgba(220,38,38,0.2); color: #f87171; }
+    [data-theme="dark"] .gc-tag-wd      { background: rgba(217,119,6,0.2); color: #fbbf24; }
+    [data-theme="dark"] .gc-tag-dropped { background: rgba(202,138,4,0.2); color: #fbbf24; }
     @media (prefers-color-scheme: dark) {
-      :root:not([data-theme="light"]) .gc-tag-cut { background: rgba(220,38,38,0.2); color: #f87171; }
-      :root:not([data-theme="light"]) .gc-tag-wd  { background: rgba(217,119,6,0.2); color: #fbbf24; }
+      :root:not([data-theme="light"]) .gc-tag-cut     { background: rgba(220,38,38,0.2); color: #f87171; }
+      :root:not([data-theme="light"]) .gc-tag-wd      { background: rgba(217,119,6,0.2); color: #fbbf24; }
+      :root:not([data-theme="light"]) .gc-tag-dropped { background: rgba(202,138,4,0.2); color: #fbbf24; }
     }
     .gc-scores { text-align: center; }
     .gc-score-total {
@@ -799,7 +801,7 @@ function renderSummaryTable(golfers) {
     }).join('');
     return `<tr class="${rowCls}">
       <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text-muted)">${esc(String(g.position||'—'))}</td>
-      <td style="font-weight:600;min-width:140px">${dropped ? `<del>${esc(g.name)}</del>` : esc(g.name)}</td>
+      <td style="font-weight:600;min-width:140px">${dropped ? `<del>${esc(g.name)}</del> <span style="font-size:10px;font-weight:400;font-style:normal;color:#854d0e">over $30</span>` : esc(g.name)}</td>
       <td class="${scoreClass(g.score)}" style="font-family:'DM Mono',monospace;font-weight:700;text-align:right">${esc(g.score||'—')}</td>
       <td class="${scoreClass(g.today)}" style="font-family:'DM Mono',monospace;text-align:right">${esc(g.today||'—')}</td>
       <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);text-align:right">${esc(String(g.thru||'—'))}</td>
